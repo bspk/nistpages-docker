@@ -12,10 +12,8 @@ RUN gem install jekyll-coffeescript \
   jekyll-default-layout \
   jekyll-titles-from-headings
 
-ADD --chown=jekyll:jekyll runpages.sh site-defaults.yml site-overrides.yml /site/
+ADD --chown=jekyll:jekyll start.sh site-defaults.yml site-overrides.yml /site/
 
-EXPOSE 4000
+ENTRYPOINT ["/site/start.sh"]
 
-ENTRYPOINT ["/site/runpages.sh"]
-
-CMD ["serve"]
+CMD ["build"]

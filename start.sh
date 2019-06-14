@@ -8,6 +8,6 @@ else
   cmd="$1"
 fi
 
-echo $cmd
+# echo $cmd
 
 jekyll "$cmd" --config /site/site-defaults.yml,_config.yml,/site/site-overrides.yml --safe --verbose --trace --destination /srv/jekyll/_site

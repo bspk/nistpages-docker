@@ -1,0 +1,5 @@
+FROM nistpages-build
+
+EXPOSE 4000
+
+CMD ["serve"]
