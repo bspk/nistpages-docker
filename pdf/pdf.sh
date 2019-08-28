@@ -8,5 +8,10 @@ find . -name '*.tex' -print
 
 find . -name '*.tex' -exec 'pdflatex' '{}' ';'
 
+find . -name '*.aux' -exec 'bibtex' '{}' ';'
+
 find . -name '*.tex' -exec 'pdflatex' '{}' ';'
 
+find . -name '*.tex' -exec 'pdflatex' '{}' ';'
+
+find . -name '*.pdf' -exec 'cp' '{}' /opt/source/ ';'
