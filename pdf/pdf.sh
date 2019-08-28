@@ -1,6 +1,12 @@
 #!/bin/sh
 
+cp -rv /opt/source/* /opt/work/
+
 python /opt/pdf/preprocess-pdf.py
 
-pdflatex *.tex
-pdflatex *.tex
+find . -name '*.tex' -print
+
+find . -name '*.tex' -exec 'pdflatex' '{}' ';'
+
+find . -name '*.tex' -exec 'pdflatex' '{}' ';'
+

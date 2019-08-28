@@ -13,5 +13,5 @@ services:
       - "${NISTPAGES_SOURCE}:/opt/source"
       - .:/opt/pdf
     command: /opt/pdf/pdf.sh
-    working_dir: /opt/source
+    working_dir: /opt/work
     
