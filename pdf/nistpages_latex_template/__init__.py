@@ -27,6 +27,7 @@ Changelog (described in 4.tex)
 
 """
 import pkg_resources
+from shutil import copyfile
 import nistpages_latex_template.tags as t
 name = "nistpages_latex_template"
 
@@ -57,6 +58,13 @@ def author_block(author_data):
     return text
 
 
+def copy_files():
+    files = ["DoC-logo-eps-converted-to.pdf",
+             "techpubs.bst"]
+    for file in files:
+        copyfile(pkg_resources.resource_filename(name, file), file)
+
+
 def generate(
         report_number=None,
         doi_url=None,
@@ -76,6 +84,8 @@ def generate(
     """
     if report_number is None or doi_url is None or month is None or year is None or authors is None or content is None:
         raise ValueError("Required values to generate PDF file not found.")
+
+    copy_files()
 
     latex = readfile('1.tex')
 
