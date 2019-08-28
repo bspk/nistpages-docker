@@ -38,10 +38,6 @@ def readfile(file):
     return text
 
 
-tex_chunk_files = ['1.tex', '2.tex', '3.tex', '4.tex', '5.tex']
-chunks = [readfile(f) for f in tex_chunk_files]
-
-
 def author_block(author_data):
     text = '\\normalsize '
     for authors in author_data:
