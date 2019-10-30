@@ -30,6 +30,7 @@ import pkg_resources
 from shutil import copyfile
 import nistpages_latex_template.tags as t
 name = "nistpages_latex_template"
+import os
 
 
 def readfile(file):
@@ -55,19 +56,18 @@ def author_block(author_data):
 
 
 def copy_files():
-    files = ["DoC-logo-eps-converted-to.pdf",
-             "techpubs.bst"]
-    for file in files:
-        copyfile(pkg_resources.resource_filename(name, file), file)
+    os.makedirs('_pdfinclude', exist_ok=True)
+    copyfile(pkg_resources.resource_filename(name, "DoC-logo-eps-converted-to.pdf"), "_pdfinclude/DoC-logo-eps-converted-to.pdf")
+    copyfile(pkg_resources.resource_filename(name, "techpubs.bst"), "techpubs.bst")
 
 
-def generate(
+def generate(content,
         report_number=None,
         doi_url=None,
         month=None,
         year=None,
         authors=None,
-        content=None):
+        **kwargs):
     """Take in LaTeX body with metadata and generate the LaTeX code using the NIST template
 
     :param report_number:

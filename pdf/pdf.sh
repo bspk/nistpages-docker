@@ -14,4 +14,4 @@ find . -name '*.tex' -exec 'pdflatex' '{}' ';'
 
 find . -name '*.tex' -exec 'pdflatex' '{}' ';'
 
-find . -name '*.pdf' -exec 'cp' '{}' /opt/source/ ';'
+find . -name '*.pdf' -not -path './_pdfinclude/*' -exec 'cp' '{}' /opt/source/ ';'

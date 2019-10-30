@@ -10,12 +10,12 @@ import subprocess
 import nistpages_latex_template as latex
 from ruamel.yaml import YAML
 yaml = YAML(typ='safe')
+import pprint
+pp = pprint.PrettyPrinter(indent=2)
 
 # tags from configuration file _pdf.yml, just in case you want to change them later
 TAG_PARTS = 'parts'
 TAG_NO_TITLE = 'doNotAddTitle'
-TAG_RECURSE = 'recurse'
-
 
 def read_yaml(filename):
     """Read and parse a configuration file
@@ -38,12 +38,16 @@ def read_md(filename):
         text = file.read()
 
     # find the header
-    header_end = text.index('---\n', 4) + 4  # The +4 is the length of the character sequence
+    
+    if (text.startswith('---\n')):
+        header_end = text.index('---\n', 4) + 4  # The +4 is the length of the character sequence
 
-    header = text[:header_end]
-    body = text[header_end:]
+        header = text[:header_end]
+        body = text[header_end:]
 
-    return header[4:-4], body
+        return header[4:-4], body
+    else:
+        return '', text
 
 
 def md_to_latex(filename, add_title=True):
@@ -55,11 +59,14 @@ def md_to_latex(filename, add_title=True):
     :return: headers as an object, latex content as a string
     """
     header, body = read_md(filename)
-    headers = yaml.load(header)  # 'headers' is now a python object containing the header fields
+    if (header):
+        headers = yaml.load(header)  # 'headers' is now a python object containing the header fields
+        
 
     # insert the title from the header
-    sec_title = "# " + headers['title']
-    body = '\n'.join([sec_title, body])
+    if (headers and headers['title'] and add_title):
+        sec_title = "# " + headers['title']
+        body = '\n'.join([sec_title, body])
 
     done = subprocess.run(['kramdown', '--output', 'latex'], input=body, text=True, capture_output=True)
 
@@ -75,36 +82,24 @@ def assemble_parts(config):
     texts = []
     for p in parts:
         add_title = p not in no_titles
-        headers, body = md_to_latex(p, add_title=add_title)
+        headers, body = md_to_latex(os.path.join(config['basedir'], p), add_title=add_title)
         texts.append(body)
     return '\n'.join(texts)
 
 
-def generate_doc(path_to_pdf_yaml=None):
-    config_file = '_pdf.yml'
-    if path_to_pdf_yaml is not None:
-        config_file = path_to_pdf_yaml
-    config = read_yaml(config_file)
+def generate_doc():
+    if (os.path.exists('_pdf.yml')):
+        configs = read_yaml('_pdf.yml')
 
-    if TAG_RECURSE in config:
-        """If in here, this is a root of a project that has sub-folders,
-        each with their own _pdf.yaml and pdf output."""
-        for path in config[TAG_RECURSE]:
-            next_config = os.path.join(os.path.curdir, path, '_pdf.yml')
-            generate_doc(next_config)
-
-    if TAG_PARTS in config:
-        body = assemble_parts(config)
-        tex = latex.generate(report_number="999",
-                             doi_url="http://something",
-                             month="July",
-                             year="2019",
-                             authors="",
-                             content=body)
-        filename = config['filename']
-        with open(filename, 'w') as f:
-            f.write(tex)
-
+        for idx, config in enumerate(configs['pdf']):
+            print("Processing PDF configuration %d:" % idx)
+            pp.pprint(config)
+            body = assemble_parts(config)
+            tex = latex.generate(body, **config)
+            filename = os.path.join(config['basedir'], config['filename'] + '.tex')
+            print("Writing file %s" % filename)
+            with open(filename, 'w') as f:
+                f.write(tex)
 
 def main():
     generate_doc()
