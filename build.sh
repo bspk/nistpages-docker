@@ -6,3 +6,6 @@
 docker build -t nistpages-build -f Dockerfile.build .
 
 docker build -t nistpages-dev -f Dockerfile.dev .
+
+docker build -t nistpages-pdf pdf/
+
