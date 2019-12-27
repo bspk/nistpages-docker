@@ -20,5 +20,6 @@ if [[ "$1" == "debug" ]]
 then
 	echo "Exporting log files..."
 	find . -name '*.log' -exec 'cp' '{}' /opt/source/ ';'
+	find . -name '*.tex' -exec 'cp' '{}' /opt/source/ ';'
 fi
 

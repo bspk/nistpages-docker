@@ -4,7 +4,7 @@ FROM python:3-slim
 RUN apt-get update && \
   apt-get install -y texlive-latex-base texlive-latex-extra ruby && \
   gem install kramdown && \
-  pip install ruamel.yaml && \
+  pip install ruamel.yaml jinja2 && \
   apt-get clean
 
 

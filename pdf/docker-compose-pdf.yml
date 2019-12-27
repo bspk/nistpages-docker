@@ -8,10 +8,10 @@ version: '3'
 
 services:
   pdfrender:
-    image: jricher/nistpages-pdf
+    image: nistpages-pdf
     volumes:
       - "${NISTPAGES_SOURCE}:/opt/source"
       - .:/opt/pdf
-    command: /opt/pdf/pdf.sh
+    command: /opt/pdf/pdf.sh debug
     working_dir: /opt/work
     
