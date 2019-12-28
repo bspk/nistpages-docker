@@ -13,6 +13,7 @@ import pprint
 pp = pprint.PrettyPrinter(indent=2)
 import jinja2
 from jinja2 import Template
+import re
 
 # Latex template for Jinja
 latex_jinja_env = jinja2.Environment(
@@ -79,9 +80,13 @@ def md_to_latex(filename):
     done = subprocess.run(['kramdown', '--output', 'latex'], input=body, text=True, capture_output=True)
 
     # this is where we'd post-process the individual latex results
+    output = fix_internal_links(done.stdout)
 
-    return headers, done.stdout
+    return headers, output
 
+
+def fix_internal_links(text):
+    return re.sub('\\\\href{[^}]*#([^}]*)}', '\\\\hyperlink{\\1}', text)
 
 def assemble_parts(config):
 
@@ -97,10 +102,17 @@ def assemble_parts(config):
     
     # post-proces texts through template
     template = latex_jinja_env.get_template(os.path.join(config['basedir'], config['template']))
-    latex = template.render({
+    
+    vars = {
         'body': "\n".join(texts),
         'foreword': "\n".join(foreword)
-    })
+    }
+    
+    # copy over some fields from the config block
+    for field in ('report_number', 'doi_url', 'month', 'year'):
+        vars[field] = config[field]
+    
+    latex = template.render(vars)
     
     return latex
     
