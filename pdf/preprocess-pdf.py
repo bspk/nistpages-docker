@@ -87,20 +87,27 @@ def md_to_latex(filename):
 
 def assemble_parts(config):
 
-    foreword = []
-    for p in config['foreword']: 
-        headers, body = md_to_latex(os.path.join(config['basedir'], p))
-        foreword.append(body)
+    foreword = collect_section(config, 'foreword')
+    texts = collect_section(config, 'body')
 
-    texts = []
-    for p in config['body']:
-        headers, body = md_to_latex(os.path.join(config['basedir'], p))
-        texts.append(body)
+    references = collect_section(config, 'references')
+    abstract = collect_section(config, 'abstract')
+    introduction = collect_section(config, 'introduction')
+    acknowledgements = collect_section(config, 'acknowledgements')
+    glossary = collect_section(config, 'glossary')
+    
     
     # post-proces texts through template
     template = latex_jinja_env.get_template(os.path.join(config['basedir'], config['template']))
     
     vars = {
+        'has_foreword': 'true' if foreword else 'false',
+        'has_references': 'true' if references else 'false',
+        'has_abstract': 'true' if abstract else 'false',
+        'has_introduction': 'true' if introduction else 'false',
+        'has_acknowledgements': 'true' if acknowledgements else 'false',
+        'has_glossary': 'true' if glossary else 'false',
+        
         'body': "\n".join(texts),
         'foreword': "\n".join(foreword)
     }
@@ -113,7 +120,13 @@ def assemble_parts(config):
     
     return latex
     
-
+def collect_section(config, section):
+    collect = []
+    if section in config:
+        for p in config[section]:
+            headers, body = md_to_latex(os.path.join(config['basedir'], p))
+            collect.append(body)
+    return collect
 
 def generate_doc():
     if (os.path.exists('_pdf.yml')):
