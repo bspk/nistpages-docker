@@ -13,17 +13,19 @@ RUN gem build kramdown-latexnist.gemspec
 
 FROM python:3-slim
 
-RUN mkdir /usr/local/kramdown_latexnist
-COPY --from=gembuilder /usr/local/kramdown_latexnist/*gem /usr/local/kramdown_latexnist/kramdown-latexnist.gem
-
 # Install latex, ruby, and extra tools
 
 RUN apt-get update && \
   apt-get install -y texlive-latex-base texlive-latex-extra ruby && \
   apt-get clean
 
+# Copy our custom library
+
+RUN mkdir /usr/local/kramdown_latexnist
+COPY --from=gembuilder /usr/local/kramdown_latexnist/kramdown-latexnist-*.gem /usr/local/kramdown_latexnist/
+
 # Install libraries
 
 RUN gem install kramdown && \
-  gem install --local /usr/local/kramdown_latexnist/kramdown-latexnist.gem && \
+  gem install --local /usr/local/kramdown_latexnist/kramdown-latexnist-*.gem && \
   pip install ruamel.yaml jinja2
