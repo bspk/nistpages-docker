@@ -1,0 +1,16 @@
+name: kramdown-latexnist
+summary: Converts markdown to Latex for NIST Pages
+description: A Kramdown converter for converting Markdown files into Latex for NIST Pages.
+license: MIT
+authors: Bespoke Engineering
+email: contact@bspk.io
+homepage: https://bspk.io/
+
+dependencies:
+  kramdown: ~> 2.1
+
+development_dependencies:
+  bundler: ~> 1.0
+  rspec: ~> 3.0
+  rubygems-tasks: ~> 0.2
+  yard: ~> 0.8

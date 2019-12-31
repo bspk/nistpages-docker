@@ -77,10 +77,11 @@ def md_to_latex(filename):
     """
     headers, body = parse_frontmatter(filename)
 
-    done = subprocess.run(['kramdown', '--output', 'latex'], input=body, text=True, capture_output=True)
+    done = subprocess.run(['/opt/pdf/kramdown-latexnist'], input=body, text=True, capture_output=True)
 
     # this is where we'd post-process the individual latex results
-    output = fix_internal_links(done.stdout)
+    output = done.stdout
+    #output = fix_internal_links(output)
 
     return headers, output
 
