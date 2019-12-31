@@ -79,15 +79,11 @@ def md_to_latex(filename):
 
     done = subprocess.run(['/opt/pdf/kramdown-latexnist'], input=body, text=True, capture_output=True)
 
-    # this is where we'd post-process the individual latex results
+    # this is where we'd post-process the individual latex results if we need to
     output = done.stdout
-    #output = fix_internal_links(output)
 
     return headers, output
 
-
-def fix_internal_links(text):
-    return re.sub('\\\\href{[^}]*#([^}]*)}', '\\\\hyperlink{\\1}', text)
 
 def assemble_parts(config):
 
