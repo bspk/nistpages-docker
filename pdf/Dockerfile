@@ -16,7 +16,7 @@ FROM python:3-slim
 # Install latex, ruby, and extra tools
 
 RUN apt-get update && \
-  apt-get install -y texlive-latex-base texlive-latex-extra ruby && \
+  apt-get install -y texlive-latex-base texlive-latex-extra ruby ghostscript texlive-font-utils && \
   apt-get clean
 
 # Copy our custom library

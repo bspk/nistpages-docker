@@ -36,7 +36,28 @@ module Kramdown
 				end
 			end
 			
-			
+	        def convert_img(el, _opts)
+	          line = el.options[:location]
+			  
+			  src = el.attr['src']
+			  
+	          if src =~ /^(https?|ftps?):\/\//
+	            warning("Cannot include non-local image#{line ? " (line #{line})" : ''}")
+	            ''
+	          elsif !src.empty?
+	            @data[:packages] << 'graphicx'
+				
+				# grab our special image path if it's there
+				src = el.attr['latex-src'] || src
+				
+	            "#{latex_link_target(el)}\\includegraphics{#{src}}"
+	          else
+	            warning("Cannot include image with empty path#{line ? " (line #{line})" : ''}")
+	            ''
+	          end
+	        end
+
+			# Debug helper method
 			def printelopts(el, opts)
 				puts "EL++++ ", el.inspect
 				puts "OPTS++ ", opts.inspect

@@ -100,6 +100,8 @@ def assemble_parts(config):
     template = latex_jinja_env.get_template(os.path.join(config['basedir'], config['template']))
     
     vars = {
+        'graphicspath': create_graphics_path(config),
+        
         'has_foreword': has_section(foreword),
         'has_references': has_section(references),
         'has_abstract': has_section(abstract),
@@ -131,6 +133,11 @@ def collect_section(config, section):
             headers, body = md_to_latex(os.path.join(config['basedir'], p))
             collect.append(body)
     return collect
+
+def create_graphics_path(config):
+    return ''.join([
+        '{' + os.path.join(os.path.relpath(d, fileworkdir(config)), '') + '}' 
+            for d in config['graphics']])
 
 def create_work_area(config):
     if (not os.path.exists(fileworkdir(config))):
