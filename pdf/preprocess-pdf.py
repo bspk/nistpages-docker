@@ -1,9 +1,9 @@
 """
-Pre-processes a special doc or accompanying site written in markdown for pdf render.
-Requires .md files that are intended for Jekyll and include Jekyll front matter headers, which are the first thing
-    in the file and are delineated with '---\n'.
+Processes a set Jekyll site for PDF rendering.
 
-Written by Mark Sherman <mark@bspk.io>
+Configured using the _pdf.yml configuration file.
+
+Written by Mark Sherman <mark@bspk.io> and Justin Richer <justin@bspk.io>
 """
 import os.path
 import subprocess
@@ -29,9 +29,6 @@ latex_jinja_env = jinja2.Environment(
 	autoescape = False,
 	loader = jinja2.FileSystemLoader(os.path.abspath('.'))
 )
-
-# tags from configuration file _pdf.yml, just in case you want to change them later
-TAG_PARTS = 'parts'
 
 def read_yaml(filename):
     """Read and parse a configuration file
@@ -135,6 +132,20 @@ def collect_section(config, section):
             collect.append(body)
     return collect
 
+def create_work_area(config):
+    if (not os.path.exists(fileworkdir(config))):
+        os.mkdir(fileworkdir(config))
+
+def fileworkdir(config):
+    return os.path.join(config['basedir'], config['workdir'], config['filename'])
+
+def convert_to_pdf(config):
+    # run pdflatex to do the converstion
+    
+    done = subprocess.run(['pdflatex', '-interaction=nonstopmode', '-halt-on-error', config['filename'] + '.tex'], cwd=fileworkdir(config), text=True, capture_output=True)
+    
+    return done.stdout
+
 def generate_doc():
     # parse our configuration document and export the resulting file
     if (os.path.exists('_pdf.yml')):
@@ -143,11 +154,19 @@ def generate_doc():
         for idx, config in enumerate(configs['pdf']):
             print("Processing PDF configuration %d:" % idx)
             pp.pprint(config)
+            
+            create_work_area(config)
+            
             body = assemble_parts(config)
-            filename = os.path.join(config['basedir'], config['filename'] + '.tex')
-            print("Writing file %s" % filename)
+            filename = os.path.join(fileworkdir(config), config['filename'] + '.tex')
+            print("Writing LaTeX file %s" % filename)
             with open(filename, 'w') as f:
                 f.write(body)
+            
+            print("Writing PDF file")
+            pdflog = convert_to_pdf(config)
+            print(pdflog)
+
 
 def main():
     generate_doc()
