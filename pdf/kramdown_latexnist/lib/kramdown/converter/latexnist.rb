@@ -10,6 +10,12 @@ module Kramdown
 		#
 		class Latexnist < Latex
 			
+	        # Initialize the LaTeX converter with the +root+ element and the conversion +options+.
+			def initialize(root, options)
+				@headers = options[:yaml_headers]
+				super
+			end
+
 	        def convert_footnote(el, opts)
 	          @data[:packages] << 'fancyvrb'
 			  options = opts.dup.merge(:footnote => true) #flag everythign inside a footnote as special because we need to treat things a little differently sometimes

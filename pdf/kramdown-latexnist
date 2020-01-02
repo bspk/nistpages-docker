@@ -5,12 +5,39 @@ $LOAD_PATH.unshift(lib_dir) unless $LOAD_PATH.include?(lib_dir)
 
 require 'kramdown'
 require 'kramdown/latexnist'
+require 'yaml'
 
 case ARGV[0]
 when '-h', '--help'
-  warn "usage: #{File.dirname($0)} <INPUT.md >OUTPUT"
+  warn "usage: #{File.dirname($0)} INPUT.md >OUTPUT"
   exit
 end
 
-doc = Kramdown::Document.new(ARGF.read)
+input = File.open(ARGV[0])
+
+file_data = input.read
+
+# Parse the Jekyll frontmatter headers to be passed in
+if file_data.start_with?("---\n")
+	header_end = file_data.index("---\n", 4) + 4
+	
+	header = file_data[4..header_end]
+	body = file_data[header_end..-1]
+	
+	headers = YAML.load(header)
+	
+else
+	body = file_data
+	headers = {}
+end
+
+doc = Kramdown::Document.new(body, 
+	{
+		:input_file => input,       # file being read, will have path information
+		:yaml_headers => headers    # headers parsed from the file frontmatter, can be empty if not available
+	}
+)
+
 puts doc.to_latexnist
+
+input.close

@@ -75,9 +75,11 @@ def md_to_latex(filename):
     :param filename: path of a jekyll markdown file
     :return: headers as an object, latex content as a string
     """
+    # parse the frontmatter out in case we need it later
     headers, body = parse_frontmatter(filename)
 
-    done = subprocess.run(['/opt/pdf/kramdown-latexnist'], input=body, text=True, capture_output=True)
+    # run the file through our external processor
+    done = subprocess.run(['/opt/pdf/kramdown-latexnist', filename], text=True, capture_output=True)
 
     # this is where we'd post-process the individual latex results if we need to
     output = done.stdout
@@ -101,12 +103,12 @@ def assemble_parts(config):
     template = latex_jinja_env.get_template(os.path.join(config['basedir'], config['template']))
     
     vars = {
-        'has_foreword': 'true' if foreword else 'false',
-        'has_references': 'true' if references else 'false',
-        'has_abstract': 'true' if abstract else 'false',
-        'has_introduction': 'true' if introduction else 'false',
-        'has_acknowledgements': 'true' if acknowledgements else 'false',
-        'has_glossary': 'true' if glossary else 'false',
+        'has_foreword': has_section(foreword),
+        'has_references': has_section(references),
+        'has_abstract': has_section(abstract),
+        'has_introduction': has_section(introduction),
+        'has_acknowledgements': has_section(acknowledgements),
+        'has_glossary': has_section(glossary),
         
         'body': "\n".join(texts),
         'foreword': "\n".join(foreword)
@@ -116,11 +118,16 @@ def assemble_parts(config):
     for field in ('report_number', 'doi_url', 'month', 'year'):
         vars[field] = config[field]
     
+    # run rendered items and configuration through the template
     latex = template.render(vars)
     
     return latex
-    
+
+def has_section(list):
+    return 'true' if list else 'false' # these flags are needed in this form for the latex template
+
 def collect_section(config, section):
+    # loop through every file in the collection and convert it using our external kramdown converter
     collect = []
     if section in config:
         for p in config[section]:
@@ -129,6 +136,7 @@ def collect_section(config, section):
     return collect
 
 def generate_doc():
+    # parse our configuration document and export the resulting file
     if (os.path.exists('_pdf.yml')):
         configs = read_yaml('_pdf.yml')
 
