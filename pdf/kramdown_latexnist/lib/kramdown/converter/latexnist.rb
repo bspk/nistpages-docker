@@ -51,11 +51,26 @@ module Kramdown
 				# grab our special image path if it's there
 				src = el.attr['latex-src'] || src
 				
-	            "#{latex_link_target(el)}\\includegraphics{#{src}}"
+	            "#{latex_link_target(el)}\\includegraphics[width=\\linewidth]{#{src}}"
 	          else
 	            warning("Cannot include image with empty path#{line ? " (line #{line})" : ''}")
 	            ''
 	          end
+	        end
+
+	        TABLE_ALIGNMENT_CHAR = {default: 'L', left: 'L', center: 'C', right: 'R'} # :nodoc:
+
+			def convert_table(el, opts)
+				@data[:packages] << 'tabulary'
+				#align = el.options[:alignment].map {|a| TABLE_ALIGNMENT_CHAR[a] }.join('|')
+				#align = el.options[:alignment].map {|a| 'L' }.join('|')
+				attrs = attribute_list(el)
+				"#{latex_link_target(el)}\\begin{tabulary}{\\linewidth}{|#{align}|}#{attrs}\n" \
+				"\\hline\n#{inner(el, opts)}\n\\end{tabulary}#{attrs}\n\n"
+			end
+
+	        def convert_tr(el, opts)
+	          el.children.map {|c| send("convert_#{c.type}", c, opts) }.join(' & ') << "\\\\ \\hline\n"
 	        end
 
 			# Debug helper method
