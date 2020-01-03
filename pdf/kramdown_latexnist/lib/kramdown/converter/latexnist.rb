@@ -14,6 +14,7 @@ module Kramdown
 			def initialize(root, options)
 				@headers = options[:yaml_headers]
 				super
+		        ENTITY_CONV_TABLE.each_value {|v| v[0] = "#{v[0]}{}" } # add extra escape sequence to HTML entity conversion values
 			end
 
 	        def convert_footnote(el, opts)
