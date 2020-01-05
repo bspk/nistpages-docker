@@ -62,11 +62,17 @@ module Kramdown
 
 			def convert_table(el, opts)
 				@data[:packages] << 'tabulary'
-				#align = el.options[:alignment].map {|a| TABLE_ALIGNMENT_CHAR[a] }.join('|')
+				align = el.options[:alignment].map {|a| TABLE_ALIGNMENT_CHAR[a] }.join('|')
 				#align = el.options[:alignment].map {|a| 'L' }.join('|')
 				attrs = attribute_list(el)
-				"#{latex_link_target(el)}\\begin{tabulary}{\\linewidth}{|#{align}|}#{attrs}\n" \
-				"\\hline\n#{inner(el, opts)}\n\\end{tabulary}#{attrs}\n\n"
+				
+				if el.attr['latex-longtable']
+					"#{latex_link_target(el)}\\begin{ltabulary}{|#{align}|}#{attrs}\n" \
+					"\\hline\n#{inner(el, opts)}\n\\end{ltabulary}#{attrs}\n\n"
+				else
+					"#{latex_link_target(el)}\\begin{tabulary}{\\textwidth}{|#{align}|}#{attrs}\n" \
+					"\\hline\n#{inner(el, opts)}\n\\end{tabulary}#{attrs}\n\n"
+				end
 			end
 
 	        def convert_tr(el, opts)
