@@ -28,7 +28,7 @@ module Kramdown
 				
 				text = inner(el, opts)
 				
-				if el.attr['name']&.start_with?('ref-') # reference anchor
+				if el.attr['name'] # named anchor, treat like a target not a link
 					"\\hypertarget{#{el.attr['name']}}{#{text}}\\label{#{el.attr['name']}}"
 				elsif url =~ /#((ref-|s-|f-).*)\z/ # internal document links
 					"\\hyperlink{#{$1}}{#{text}}"
