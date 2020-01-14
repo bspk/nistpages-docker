@@ -116,6 +116,18 @@ module Kramdown
 				options = opts.dup.merge(:thead => true) #flag everythign inside as part of a table header
 				"#{inner(el, options)}\n"
 			end
+			
+			def convert_header(el, opts)
+				type = @options[:latex_headers][output_header_level(el.options[:level]) - 1]
+				if ((id = el.attr['id']) ||
+					(@options[:auto_ids] && (id = generate_id(el.options[:raw_text])))) && in_toc?(el)
+					"\\hypertarget{#{id}}{}\\label{#{id}}\n\\#{type}{#{inner(el, opts)}}\n\n"
+				else
+					"\\#{type}*{#{inner(el, opts)}}\n\n"
+				end
+			end
+
+			
 
 			# Debug helper method
 			def printelopts(el, opts)
