@@ -12,6 +12,6 @@ services:
     volumes:
       - "${NISTPAGES_SOURCE}:/opt/source"
       - .:/opt/pdf
-    command: /opt/pdf/pdf.sh debug
-    working_dir: /opt/work
+    command: python /opt/pdf/preprocess-pdf.py
+    working_dir: /opt/source
     

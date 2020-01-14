@@ -86,31 +86,18 @@ def md_to_latex(filename):
 
 def assemble_parts(config):
 
-    foreword = collect_section(config, 'foreword')
-    texts = collect_section(config, 'body')
+    sections = map_sections(config)
 
-    references = collect_section(config, 'references')
-    abstract = collect_section(config, 'abstract')
-    introduction = collect_section(config, 'introduction')
-    acknowledgements = collect_section(config, 'acknowledgements')
-    glossary = collect_section(config, 'glossary')
-    
-    
+    rendered = {k:collect_section(config, sections[k]) for k in sections}
+
     # post-proces texts through template
     template = latex_jinja_env.get_template(os.path.join(config['basedir'], config['template']))
     
     vars = {
         'graphicspath': create_graphics_path(config),
-        
-        'has_foreword': has_section(foreword),
-        'has_references': has_section(references),
-        'has_abstract': has_section(abstract),
-        'has_introduction': has_section(introduction),
-        'has_acknowledgements': has_section(acknowledgements),
-        'has_glossary': has_section(glossary),
-        
-        'body': "\n".join(texts),
-        'foreword': "\n".join(foreword)
+        'body': rendered.get('body'),
+        'foreword': rendered.get('foreword'),
+        'appendix': rendered.get('appendix')
     }
     
     # copy over some fields from the config block
@@ -118,21 +105,38 @@ def assemble_parts(config):
         vars[field] = config[field]
     
     # run rendered items and configuration through the template
-    latex = template.render(vars)
+    latex = template.render(**vars)
     
     return latex
 
-def has_section(list):
-    return 'true' if list else 'false' # these flags are needed in this form for the latex template
+def has_section(section, rendered):
+    return 'true' if section in rendered else 'false' # these flags are needed in this form for the latex template
+
+def map_sections(config):
+    return {s['name']:s for s in config['sections']}
 
 def collect_section(config, section):
     # loop through every file in the collection and convert it using our external kramdown converter
     collect = []
-    if section in config:
-        for p in config[section]:
-            headers, body = md_to_latex(os.path.join(config['basedir'], p))
-            collect.append(body)
-    return collect
+    for p in section['parts']:
+        headers, body = md_to_latex(os.path.join(config['basedir'], p))
+        
+        # run through a section template if it exists
+        if 'part_template' in section:
+            template = latex_jinja_env.get_template(os.path.join(config['basedir'], section['part_template']))
+            
+            body = template.render(body=body, section=section, part=p)
+        
+        collect.append(body)
+    
+    # render the string
+    rendered = '\n'.join(collect)
+    if 'section_template' in section:
+        template = latex_jinja_env.get_template(os.path.join(config['basedir'], section['section_template']))
+        
+        rendered = template.render(body=rendered, section=section)
+    
+    return rendered
 
 def create_graphics_path(config):
     return ''.join([
@@ -141,7 +145,7 @@ def create_graphics_path(config):
 
 def create_work_area(config):
     if (not os.path.exists(fileworkdir(config))):
-        os.mkdir(fileworkdir(config))
+        os.makedirs(fileworkdir(config), exist_ok=True)
 
 def fileworkdir(config):
     return os.path.join(config['basedir'], config['workdir'], config['filename'])
@@ -173,6 +177,8 @@ def generate_doc():
             print("Writing PDF file")
             pdflog = convert_to_pdf(config)
             print(pdflog)
+    else:
+        print("Couldn't find _pdf.yml configuration file in current directory.")
 
 
 def main():
