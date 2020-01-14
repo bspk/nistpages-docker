@@ -101,7 +101,7 @@ def assemble_parts(config):
     }
     
     # copy over some fields from the config block
-    for field in ('report_number', 'doi_url', 'month', 'year'):
+    for field in ('report_number', 'doi_url', 'month', 'year', 'page_title'):
         vars[field] = config[field]
     
     # run rendered items and configuration through the template
