@@ -26,14 +26,18 @@ module Kramdown
 			def convert_a(el, opts)
 				url = el.attr['href']
 				
+				text = inner(el, opts)
+				
 				if el.attr['name']&.start_with?('ref-') # reference anchor
-					"\\hypertarget{#{el.attr['name']}}{#{inner(el, opts)}}\\label{#{el.attr['name']}}"
+					"\\hypertarget{#{el.attr['name']}}{#{text}}\\label{#{el.attr['name']}}"
 				elsif url =~ /#((ref-|s-|f-).*)\z/ # internal document links
-					"\\hyperlink{#{$1}}{#{inner(el, opts)}}"
+					"\\hyperlink{#{$1}}{#{text}}"
 				elsif url.start_with?('#')
-					"\\hyperlink{#{url[1..-1].gsub('%', '\\%')}}{#{inner(el, opts)}}"
+					"\\hyperlink{#{url[1..-1].gsub('%', '\\%')}}{#{text}}"
+				elsif url == text
+					"\\url{#{url.gsub('%', '\\%')}}"
 				else
-					"\\href{#{url.gsub('%', '\\%')}}{#{inner(el, opts)}}"
+					"\\href{#{url.gsub('%', '\\%')}}{#{text}}"
 				end
 			end
 			
@@ -62,9 +66,15 @@ module Kramdown
 
 			def convert_table(el, opts)
 				@data[:packages] << 'tabulary'
-				align = el.options[:alignment].map {|a| TABLE_ALIGNMENT_CHAR[a] }.join('|')
-				#align = el.options[:alignment].map {|a| 'L' }.join('|')
 				attrs = attribute_list(el)
+				
+				if el.attr['latex-columns']
+					# input is col@width,col@width,...
+					# output is col{width\textwidth}|col{width}|...
+					align = el.attr['latex-columns'].split(',').map { |a| a.split('@') }.map { |c,w| c + '{' + w + '}' }.join('|')
+				else
+					align = el.options[:alignment].map {|a| TABLE_ALIGNMENT_CHAR[a] }.join('|')
+				end
 				
 				if el.attr['latex-longtable']
 					"#{latex_link_target(el)}\\begin{ltabulary}{|#{align}|}#{attrs}\n" \
