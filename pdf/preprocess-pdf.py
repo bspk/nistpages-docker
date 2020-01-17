@@ -86,25 +86,18 @@ def md_to_latex(filename):
 
 def assemble_parts(config):
 
-    sections = map_sections(config)
+    sections = map_sections(config) # pull the sections out into a keyed table
 
-    rendered = {k:collect_section(config, sections[k]) for k in sections}
+    rendered = {k:collect_section(config, sections[k]) for k in sections} # run each section through the rendering pipeline
 
-    # post-proces texts through template
-    template = latex_jinja_env.get_template(os.path.join(config['basedir'], config['template']))
-    
     vars = {
         'graphicspath': create_graphics_path(config),
-        'body': rendered.get('body'),
-        'foreword': rendered.get('foreword'),
-        'appendix': rendered.get('appendix')
+        'config': config,
+        'rendered': rendered
     }
-    
-    # copy over some fields from the config block
-    for field in ('report_number', 'doi_url', 'month', 'year', 'page_title'):
-        vars[field] = config[field]
-    
-    # run rendered items and configuration through the template
+
+    # run rendered items and configuration through the document template
+    template = latex_jinja_env.get_template(os.path.join(config['basedir'], config['template']))
     latex = template.render(**vars)
     
     return latex
