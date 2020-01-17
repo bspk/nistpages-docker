@@ -105,7 +105,7 @@ module Kramdown
 			def convert_td(el, opts)
 				if opts[:thead]
 					# table header
-					"\\color{white}\\RaggedRight #{inner(el, opts)}"
+					"\\color{white}\\raggedright\\arraybackslash #{inner(el, opts)}"
 				else
 					# table body
 					inner(el, opts)
