@@ -19,6 +19,10 @@ RUN apt-get update && \
   apt-get install -y texlive-latex-base texlive-latex-extra ruby ghostscript texlive-font-utils && \
   apt-get clean
 
+# Copy our utility files
+RUN mkdir /opt/pdf
+ADD ./kramdown-latexnist ./preprocess-pdf.py /opt/pdf/
+
 # Copy our custom library
 
 RUN mkdir /usr/local/kramdown_latexnist
