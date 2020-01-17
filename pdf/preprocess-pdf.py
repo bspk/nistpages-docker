@@ -174,9 +174,15 @@ def generate_doc():
             with open(filename, 'w') as f:
                 f.write(body)
             
-            print("Writing PDF file")
-            pdflog = convert_to_pdf(config)
-            print(pdflog)
+            
+            runs = 2 # run pdflatex twice to generate TOC
+            filename = os.path.join(fileworkdir(config), config['filename'] + '.pdf')
+            for x in range(runs):
+                print("(%d/%d) Writing PDF file" % (x + 1, runs))
+                pdflog = convert_to_pdf(config)
+                print(pdflog)
+                print("(%d/%d) PDF File Written to %s" % (x + 1, runs, filename))
+
     else:
         print("Couldn't find _pdf.yml configuration file in current directory.")
 
