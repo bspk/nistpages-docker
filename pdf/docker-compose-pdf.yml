@@ -10,8 +10,17 @@ services:
   pdfrender:
     image: nistpages-pdf
     volumes:
-      - "${NISTPAGES_SOURCE}:/opt/source"
-      - .:/opt/pdf
+       - .:/opt/source
     command: python /opt/pdf/preprocess-pdf.py
     working_dir: /opt/source
-    
+
+# For dev:    
+# services:
+#   pdfrender:
+#     image: nistpages-pdf
+#     volumes:
+#      - "${NISTPAGES_SOURCE}:/opt/source"
+#      - .:/opt/pdf
+#     command: python /opt/pdf/preprocess-pdf.py
+#     working_dir: /opt/source
+#
