@@ -127,7 +127,27 @@ module Kramdown
 				end
 			end
 
-			
+			def convert_ul(el, opts)
+				if !@data[:has_toc] && (el.options[:ial][:refs].include?('toc') rescue nil)
+					@data[:has_toc] = true
+					'\tableofcontents'
+				else
+					if el.attr['class'] && el.attr['class'] == 'letter-list'
+						latex_environment('enumerate', el, inner(el, opts), '[label=\alph*)]')
+					else
+						latex_environment(el.type == :ul ? 'itemize' : 'enumerate', el, inner(el, opts))
+					end
+				end
+			end
+			alias convert_ol convert_ul
+
+			# Wrap the +text+ inside a LaTeX environment of type +type+. The element +el+ is passed on to
+			# the method #attribute_list -- the resulting string is appended to both the \\begin and the
+			# \\end lines of the LaTeX environment for easier post-processing of LaTeX environments.
+			def latex_environment(type, el, text, envargs='')
+				attrs = attribute_list(el)
+				"\\begin{#{type}}#{envargs}#{latex_link_target(el)}#{attrs}\n#{text.rstrip}\n\\end{#{type}}#{attrs}\n"
+			end
 
 			# Debug helper method
 			def printelopts(el, opts)
