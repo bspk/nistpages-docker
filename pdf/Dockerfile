@@ -20,6 +20,11 @@ RUN apt-get update && \
      ruby ghostscript && \
   apt-get clean
 
+# Install libraries
+
+RUN gem install kramdown && \
+  pip install ruamel.yaml jinja2
+
 # Copy our utility files
 RUN mkdir /opt/pdf
 ADD ./kramdown-latexnist ./preprocess-pdf.py /opt/pdf/
@@ -29,8 +34,4 @@ ADD ./kramdown-latexnist ./preprocess-pdf.py /opt/pdf/
 RUN mkdir /usr/local/kramdown_latexnist
 COPY --from=gembuilder /usr/local/kramdown_latexnist/kramdown-latexnist-*.gem /usr/local/kramdown_latexnist/
 
-# Install libraries
-
-RUN gem install kramdown && \
-  gem install --local /usr/local/kramdown_latexnist/kramdown-latexnist-*.gem && \
-  pip install ruamel.yaml jinja2
+RUN  gem install --local /usr/local/kramdown_latexnist/kramdown-latexnist-*.gem
