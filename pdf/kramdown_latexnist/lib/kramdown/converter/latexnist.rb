@@ -84,11 +84,28 @@ module Kramdown
 				end
 				
 				if el.attr['latex-longtable']
-					"#{latex_link_target(el)}\\begin{ltabulary}{|#{align}|}#{attrs}\n" \
-					"\\hline\n#{inner(el, opts)}\n\\end{ltabulary}#{attrs}\n\n"
+					table = "#{latex_link_target(el)}\\begin{ltabulary}{|#{align}|}#{attrs}\n" \
+					"\\hline\n#{inner(el, opts)}\n" \
+					"\\end{ltabulary}#{attrs}\n\n"
 				else
-					"#{latex_link_target(el)}\\begin{tabulary}{\\textwidth}{|#{align}|}#{attrs}\n" \
-					"\\hline\n#{inner(el, opts)}\n\\end{tabulary}#{attrs}\n\n"
+					table = "#{latex_link_target(el)}\\begin{tabulary}{\\textwidth}{|#{align}|}#{attrs}\n" \
+					"\\hline\n#{inner(el, opts)}\n" \
+					"\\end{tabulary}#{attrs}\n\n"
+				end
+
+				if el.attr['latex-table']
+					caption = escape(el.attr['latex-caption'] || '')
+					
+					"\\begin{table}[H]\n" \
+					"\\centering \n" \
+					"#{table}\n" \
+					"\\renewcommand{\\tablename}{Table}\n" \
+					"\\renewcommand{\\thetable}{#{escape(el.attr['latex-table'])}}\n" \
+					"\\caption{#{caption}}\n" \
+					"\\hypertarget{table-#{escape(el.attr['latex-table'])}}{}\\label{table-#{escape(el.attr['latex-table'])}}\n" \
+					"\\end{table}\n"
+				else
+					table
 				end
 			end
 
@@ -99,7 +116,7 @@ module Kramdown
 					rowflags = ""
 				end
 				
-				"#{rowflags}\n" << \
+				"#{rowflags}" << \
 				el.children.map {|c| send("convert_#{c.type}", c, opts) }.join(' & ') << "\\\\ \\hline\n"
 			end
 
@@ -114,7 +131,7 @@ module Kramdown
 			end
 			
 			def convert_thead(el, opts)
-				options = opts.dup.merge(:thead => true) #flag everythign inside as part of a table header
+				options = opts.dup.merge(:thead => true) #flag everything inside as part of a table header
 				"#{inner(el, options)}\n"
 			end
 			
@@ -142,14 +159,6 @@ module Kramdown
 			end
 			alias convert_ol convert_ul
 
-			# Wrap the +text+ inside a LaTeX environment of type +type+. The element +el+ is passed on to
-			# the method #attribute_list -- the resulting string is appended to both the \\begin and the
-			# \\end lines of the LaTeX environment for easier post-processing of LaTeX environments.
-			def latex_environment(type, el, text, envargs='')
-				attrs = attribute_list(el)
-				"\\begin{#{type}}#{envargs}#{latex_link_target(el)}#{attrs}\n#{text.rstrip}\n\\end{#{type}}#{attrs}\n"
-			end
-
 			def convert_p(el, opts)
 				if el.attr['latex-ignore']
 					''
@@ -159,6 +168,32 @@ module Kramdown
 				else
 					"#{latex_link_target(el)}#{inner(el, opts)}\n\n"
 				end
+			end
+
+			# Helper method used by +convert_p+ to convert a paragraph that only contains a single :img
+			# element.
+			def convert_standalone_image(el, _opts, img)
+				child = el.children.first
+				if child.attr['latex-fig']
+					attrs = attribute_list(el)
+					"\\begin{figure}#{attrs}\n\\begin{center}\n#{img}\n\\end{center}\n" \
+					"\\renewcommand{\\figurename}{Figure}\n" \
+					"\\renewcommand{\\thefigure}{#{child.attr['latex-fig']}}\n" \
+					"\\caption{#{escape(child.attr['alt'])}}\n" \
+					"\\hypertarget{fig-#{child.attr['latex-fig']}}{}\\label{fig-#{child.attr['latex-fig']}}\n" \
+					"#{latex_link_target(el, true)}\n\\end{figure}#{attrs}\n"
+				else
+					super
+				end
+			end
+
+			# Wrap the +text+ inside a LaTeX environment of type +type+. The element +el+ is passed on to
+			# the method #attribute_list -- the resulting string is appended to both the \\begin and the
+			# \\end lines of the LaTeX environment for easier post-processing of LaTeX environments.
+			# if the string +envargs+ is passed, it is inserted after the \\begin tag as a set of environment options
+			def latex_environment(type, el, text, envargs='')
+				attrs = attribute_list(el)
+				"\\begin{#{type}}#{envargs}#{latex_link_target(el)}#{attrs}\n#{text.rstrip}\n\\end{#{type}}#{attrs}\n"
 			end
 
 			# Debug helper method
