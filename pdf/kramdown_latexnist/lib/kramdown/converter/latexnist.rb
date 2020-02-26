@@ -30,7 +30,7 @@ module Kramdown
 				
 				if el.attr['name'] # named anchor, treat like a target not a link
 					"\\hypertarget{#{el.attr['name']}}{#{text}}\\label{#{el.attr['name']}}"
-				elsif url =~ /#((ref-|s-|f-).*)\z/ # internal document links
+				elsif url =~ /#((ref-|s-|f-|table-|fig-).*)\z/ # internal document links
 					"\\hyperlink{#{$1.gsub('%', '\\%')}}{#{text.gsub(' ', '~').gsub('-', '\\babelhyphen{nobreak}')}}" # use nonbreaking spaces
 				elsif url.start_with?('#')
 					"\\hyperlink{#{url[1..-1].gsub('%', '\\%')}}{#{text}}"
