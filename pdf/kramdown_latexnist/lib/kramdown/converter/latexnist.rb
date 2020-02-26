@@ -150,6 +150,17 @@ module Kramdown
 				"\\begin{#{type}}#{envargs}#{latex_link_target(el)}#{attrs}\n#{text.rstrip}\n\\end{#{type}}#{attrs}\n"
 			end
 
+			def convert_p(el, opts)
+				if el.attr['latex-ignore']
+					''
+				elsif el.children.size == 1 && el.children.first.type == :img &&
+					!(img = convert_img(el.children.first, opts)).empty?
+					convert_standalone_image(el, opts, img)
+				else
+					"#{latex_link_target(el)}#{inner(el, opts)}\n\n"
+				end
+			end
+
 			# Debug helper method
 			def printelopts(el, opts)
 				puts "EL++++ ", el.inspect
