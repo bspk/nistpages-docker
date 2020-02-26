@@ -31,10 +31,11 @@ module Kramdown
 				if el.attr['name'] # named anchor, treat like a target not a link
 					"\\hypertarget{#{el.attr['name']}}{#{text}}\\label{#{el.attr['name']}}"
 				elsif url =~ /#((ref-|s-|f-).*)\z/ # internal document links
-					"\\hyperlink{#{$1}}{#{text}}"
+					"\\hyperlink{#{$1.gsub('%', '\\%')}}{#{text.gsub(' ', '~').gsub('-', '\\babelhyphen{nobreak}')}}" # use nonbreaking spaces
 				elsif url.start_with?('#')
 					"\\hyperlink{#{url[1..-1].gsub('%', '\\%')}}{#{text}}"
-				elsif url == text
+				elsif escape(url) == text # we have to check the escaped URL because the inner text might have been escaped as well
+					# displaying the actual URL, use the URL package
 					"\\url{#{url.gsub('%', '\\%')}}"
 				else
 					"\\href{#{url.gsub('%', '\\%')}}{#{text}}"
