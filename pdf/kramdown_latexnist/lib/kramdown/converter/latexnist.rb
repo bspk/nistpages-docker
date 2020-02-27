@@ -187,6 +187,14 @@ module Kramdown
 				end
 			end
 
+			def convert_codeblock(el, _opts)
+				if el.attr['latex-literal']
+					el.value # don't escape this because we want it to be exported as a literal
+				else
+					super
+				end
+			end
+
 			# Wrap the +text+ inside a LaTeX environment of type +type+. The element +el+ is passed on to
 			# the method #attribute_list -- the resulting string is appended to both the \\begin and the
 			# \\end lines of the LaTeX environment for easier post-processing of LaTeX environments.
