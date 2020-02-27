@@ -42,10 +42,11 @@ module Kramdown
 				end
 			end
 			
-			def convert_img(el, _opts)
+			def convert_img(el, opts)
 				line = el.options[:location]
 			  
-				src = el.attr['src']
+				# grab our special image path if it's there
+				src = el.attr['latex-src'] || el.attr['src']
 			  
 				if src =~ /^(https?|ftps?):\/\//
 					warning("Cannot include non-local image#{line ? " (line #{line})" : ''}")
@@ -53,10 +54,15 @@ module Kramdown
 				elsif !src.empty?
 					@data[:packages] << 'graphicx'
 				
-					# grab our special image path if it's there
-					src = el.attr['latex-src'] || src
-				
-					"#{latex_link_target(el)}\\includegraphics[width=\\linewidth]{#{src}}"
+					img = "#{latex_link_target(el)}\\includegraphics[width=\\linewidth]{#{src}}"
+					
+					if opts[:td]
+						# we're in a table cell, wrap the image in an environment to get it to play nice
+						"\\vspace{0.05cm}\\raisebox{-.5\\height}{#{img}}"
+					else
+						img
+					end
+					
 				else
 					warning("Cannot include image with empty path#{line ? " (line #{line})" : ''}")
 					''
@@ -121,12 +127,13 @@ module Kramdown
 			end
 
 			def convert_td(el, opts)
+				options = opts.dup.merge(:td => true) #flag everything inside as part of a table header
 				if opts[:thead]
 					# table header
-					"\\color{white}\\raggedright\\arraybackslash #{inner(el, opts)}"
+					"\\raggedright\\arraybackslash\\textcolor{white}{\\textbf{#{inner(el, options)}}}"
 				else
 					# table body
-					inner(el, opts)
+					inner(el, options)
 				end
 			end
 			
