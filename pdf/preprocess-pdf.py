@@ -114,20 +114,25 @@ def collect_section(config, section):
     for p in section['parts']:
         headers, body = md_to_latex(os.path.join(config['basedir'], p))
         
-        # run through a section template if it exists
+        # run through a page-specific template if it exits
+        if 'template' in headers:
+            template = latex_jinja_env.get_template(os.path.join(config['basedir'], headers['template'])) 
+            body = template.render(body=body, section=section, part=p, headers=headers, config=config)
+            
+        # run through a common section part template if it exists
         if 'part_template' in section:
             template = latex_jinja_env.get_template(os.path.join(config['basedir'], section['part_template']))
-            
-            body = template.render(body=body, section=section, part=p)
+            body = template.render(body=body, section=section, part=p, headers=headers, config=config)
         
         collect.append(body)
     
     # render the string
     rendered = '\n'.join(collect)
+    
+    # run through a section-wide template if it exists
     if 'section_template' in section:
         template = latex_jinja_env.get_template(os.path.join(config['basedir'], section['section_template']))
-        
-        rendered = template.render(body=rendered, section=section)
+        rendered = template.render(body=rendered, section=section, config=config)
     
     return rendered
 
