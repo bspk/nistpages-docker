@@ -207,6 +207,14 @@ module Kramdown
 					super
 				end
 			end
+			
+			def convert_br(_el, opts)
+				res = +"\\\\"
+				res << "\n" if (c = opts[:parent].children[opts[:index] + 1]) &&
+					(c.type != :text || c.value !~ /^\s*\n/)
+				res
+			end
+
 
 			# Wrap the +text+ inside a LaTeX environment of type +type+. The element +el+ is passed on to
 			# the method #attribute_list -- the resulting string is appended to both the \\begin and the
