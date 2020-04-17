@@ -14,6 +14,7 @@ pp = pprint.PrettyPrinter(indent=2)
 import jinja2
 from jinja2 import Template
 import re
+import sys
 
 # Latex template for Jinja
 latex_jinja_env = jinja2.Environment(
@@ -157,9 +158,9 @@ def fileworkdir(config):
 def convert_to_pdf(config):
     # run pdflatex to do the converstion
     
-    done = subprocess.run(['pdflatex', '-interaction=nonstopmode', '-halt-on-error', config['filename'] + '.tex'], cwd=fileworkdir(config), text=True, capture_output=True)
+    done = subprocess.run(['pdflatex', '-interaction=nonstopmode', '-halt-on-error', config['filename'] + '.tex'], cwd=fileworkdir(config), capture_output=True)
     
-    return done.stdout
+    return done
 
 def generate_doc():
     # parse our configuration document and export the resulting file
@@ -182,9 +183,13 @@ def generate_doc():
             runs = 2 # run pdflatex twice to generate TOC
             filename = os.path.join(fileworkdir(config), config['filename'] + '.pdf')
             for x in range(runs):
-                print("(%d/%d) Writing PDF file" % (x + 1, runs))
+                print("(%d/%d) Converting PDF file" % (x + 1, runs))
                 pdflog = convert_to_pdf(config)
-                print(pdflog)
+                sys.stdout.buffer.write(pdflog.stdout)
+                if pdflog.returncode:
+                    print('PDFLatex Process returned exit code: ' + str(pdflog.returncode))
+                    sys.exit(pdflog.returncode)
+                
                 print("(%d/%d) PDF File Written to %s" % (x + 1, runs, filename))
 
     else:
