@@ -22,6 +22,10 @@ To generate the site content statically without serving it, use the docker run c
 
 This command tells docker to run the `nistpages-build` image, which builds the site using Jekyll, and mount the current directory into Jekyll's work directory in the container. The results are contained in `_site` under the current directory. Keep in mind that they are intended to be served based on the `baseurl` property in your `_config.yml` file, and so local viewing of these files without the appropriate web server will likely yield unwanted results.
 
+## Generating a PDF
+
+Copy the `pdf/docker-compose-pdf.yml` file from this repository into your source repository and create a `_pdf.yml` configuration file for your project. This file determines how the PDF will be created, including which templates will be used to render the content. Different PDF template sets are available for different document series, and customization is fully supported as the process is run from inside of the project directory.
+
 ## Building the Docker Images
 
 The Docker images for both building and developing NIST Pages sites can be updated using the script
