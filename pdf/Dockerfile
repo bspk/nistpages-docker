@@ -9,7 +9,7 @@ WORKDIR /usr/local/kramdown_latexnist
 
 RUN gem build kramdown-latexnist.gemspec
 
-## later: copy gem from firs step
+## Second stage: Build out our runtime image and copy gem from first step
 
 FROM python:3-slim
 
@@ -20,18 +20,20 @@ RUN apt-get update && \
      ruby ghostscript && \
   apt-get clean
 
-# Install libraries
+# Install libraries under ruby (gem) and python (pip)
 
 RUN gem install kramdown && \
   pip install ruamel.yaml jinja2
 
-# Copy our utility files
+# Copy our utility files from the source directory
 RUN mkdir /opt/pdf
 ADD ./kramdown-latexnist ./preprocess-pdf.py /opt/pdf/
 
-# Copy our custom library
+# Copy our custom library from the first stage
 
 RUN mkdir /usr/local/kramdown_latexnist
 COPY --from=gembuilder /usr/local/kramdown_latexnist/kramdown-latexnist-*.gem /usr/local/kramdown_latexnist/
+
+# Install our custom kramdown library
 
 RUN  gem install --local /usr/local/kramdown_latexnist/kramdown-latexnist-*.gem
