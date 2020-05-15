@@ -102,7 +102,13 @@ module Kramdown
 				if el.attr['latex-table']
 					caption = escape(el.attr['latex-caption'] || '')
 					
-					"\\begin{table}[H]\n" \
+					if el.attr['latex-place']
+						placement = '[' + el.attr['latex-place'] + ']'
+					else
+						placement = '[H]'
+					end
+					
+					"\\begin{table}#{placement}\n" \
 					"\\centering \n" \
 					"#{table}\n" \
 					"\\renewcommand{\\tablename}{Table}\n" \
@@ -189,7 +195,12 @@ module Kramdown
 				child = el.children.first
 				if child.attr['latex-fig']
 					attrs = attribute_list(el)
-					"\\begin{figure}#{attrs}\n\\begin{center}\n#{img}\n\\end{center}\n" \
+					if child.attr['latex-place']
+						placement = '[' + child.attr['latex-place'] + ']'
+					else
+						placement = '[h]'
+					end
+					"\\begin{figure}#{placement}#{attrs}\n\\centering\n#{img}\n\n" \
 					"\\renewcommand{\\figurename}{Figure}\n" \
 					"\\renewcommand{\\thefigure}{#{child.attr['latex-fig']}}\n" \
 					"\\caption{#{escape(child.attr['alt'])}}\n" \
@@ -214,7 +225,6 @@ module Kramdown
 					(c.type != :text || c.value !~ /^\s*\n/)
 				res
 			end
-
 
 			# Wrap the +text+ inside a LaTeX environment of type +type+. The element +el+ is passed on to
 			# the method #attribute_list -- the resulting string is appended to both the \\begin and the
