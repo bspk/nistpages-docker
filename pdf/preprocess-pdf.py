@@ -112,33 +112,34 @@ def map_sections(config):
 def collect_section(config, section):
     # loop through every file in the collection and convert it using our external kramdown converter
     collect = []
-    for p in section['parts']:
+    if 'parts' in section:
+        for p in section['parts']:
         
-        if (isinstance(p, str)):
-            # it's a plan string, so just render it directly
-            headers, body = md_to_latex(os.path.join(config['basedir'], p))
-        elif 'content' in p:
-            # it's an object, so we need to process the content through any potential options
-            headers, body = md_to_latex(os.path.join(config['basedir'], p['content']))
+            if (isinstance(p, str)):
+                # it's a plan string, so just render it directly
+                headers, body = md_to_latex(os.path.join(config['basedir'], p))
+            elif 'content' in p:
+                # it's an object, so we need to process the content through any potential options
+                headers, body = md_to_latex(os.path.join(config['basedir'], p['content']))
 
-            # run through a page-specific template if it exits
-            if 'template' in p:
-                template = latex_jinja_env.get_template(os.path.join(config['basedir'], p['template'])) 
-                body = template.render(body=body, section=section, part=p, headers=headers, config=config)
+                # run through a page-specific template if it exits
+                if 'template' in p:
+                    template = latex_jinja_env.get_template(os.path.join(config['basedir'], p['template'])) 
+                    body = template.render(body=body, section=section, part=p, headers=headers, config=config)
             
-        # run through a common section part template if it exists
-        if 'part_template' in section:
-            template = latex_jinja_env.get_template(os.path.join(config['basedir'], section['part_template']))
-            body = template.render(body=body, section=section, part=p, headers=headers, config=config)
+            # run through a common section part template if it exists
+            if 'part_template' in section:
+                template = latex_jinja_env.get_template(os.path.join(config['basedir'], section['part_template']))
+                body = template.render(body=body, section=section, part=p, headers=headers, config=config)
         
-        collect.append(body)
+            collect.append(body)
     
     # collect all the parts into a single section
     rendered = '\n'.join(collect)
     
     # run through a section-wide template if it exists
-    if 'section_template' in section:
-        template = latex_jinja_env.get_template(os.path.join(config['basedir'], section['section_template']))
+    if 'template' in section:
+        template = latex_jinja_env.get_template(os.path.join(config['basedir'], section['template']))
         rendered = template.render(body=rendered, section=section, config=config)
     
     return rendered
