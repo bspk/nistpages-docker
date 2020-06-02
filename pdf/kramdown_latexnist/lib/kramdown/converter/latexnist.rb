@@ -29,7 +29,11 @@ module Kramdown
 				text = inner(el, opts)
 				
 				if el.attr['name'] # named anchor, treat like a target not a link
-					"\\hypertarget{#{el.attr['name']}}{#{text}}\\label{#{el.attr['name']}}"
+					if el.attr['name'] =~ /((ref-).*)\z/ # reference anchor gets bolded
+						"\\hypertarget{#{el.attr['name']}}{\\textbf{#{text}}}\\label{#{el.attr['name']}}"
+					else
+						"\\hypertarget{#{el.attr['name']}}{#{text}}\\label{#{el.attr['name']}}"
+					end
 				elsif url =~ /#((ref-|s-|f-|table-|fig-).*)\z/ # internal document links
 					"\\hyperlink{#{$1.gsub('%', '\\%')}}{#{text.gsub(' ', '~').gsub('-', '\\babelhyphen{nobreak}')}}" # use nonbreaking spaces
 				elsif url.start_with?('#')
@@ -224,6 +228,14 @@ module Kramdown
 				res << "\n" if (c = opts[:parent].children[opts[:index] + 1]) &&
 					(c.type != :text || c.value !~ /^\s*\n/)
 				res
+			end
+
+			def convert_dt(el, opts)
+				"\\item[#{inner(el, opts)}] \\hfill \\\\ "
+			end
+
+			def convert_dd(el, opts)
+				"#{latex_link_target(el)}#{inner(el, opts)}\n\n"
 			end
 
 			# Wrap the +text+ inside a LaTeX environment of type +type+. The element +el+ is passed on to
