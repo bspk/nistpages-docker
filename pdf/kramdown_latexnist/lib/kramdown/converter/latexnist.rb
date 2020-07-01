@@ -34,15 +34,15 @@ module Kramdown
 					else
 						"\\hypertarget{#{el.attr['name']}}{#{text}}\\label{#{el.attr['name']}}"
 					end
-				elsif url =~ /#((ref-|s-|f-|table-|fig-).*)\z/ # internal document links
-					"\\hyperlink{#{$1.gsub('%', '\\%')}}{#{text.gsub(' ', '~').gsub('-', '\\babelhyphen{nobreak}')}}" # use nonbreaking spaces
+				elsif url =~ /#((ref-|s-|f-|table-|fig-).*)\z/ # internal document links (should these be expanded??)
+					"\\hyperlink{#{$1.gsub('%', '\\%').gsub('#', '\\#')}}{#{text.gsub(' ', '~').gsub('-', '\\babelhyphen{nobreak}')}}" # use nonbreaking spaces
 				elsif url.start_with?('#')
-					"\\hyperlink{#{url[1..-1].gsub('%', '\\%')}}{#{text}}"
+					"\\hyperlink{#{url[1..-1].gsub('%', '\\%').gsub('#', '\\#')}}{#{text}}"
 				elsif escape(url) == text # we have to check the escaped URL because the inner text might have been escaped as well
 					# displaying the actual URL, use the URL package
-					"\\url{#{url.gsub('%', '\\%')}}"
+					"\\url{#{url.gsub('%', '\\%').gsub('#', '\\#')}}"
 				else
-					"\\href{#{url.gsub('%', '\\%')}}{#{text}}"
+					"\\href{#{url.gsub('%', '\\%').gsub('#', '\\#')}}{#{text}}"
 				end
 			end
 			
@@ -97,31 +97,46 @@ module Kramdown
 					table = "#{latex_link_target(el)}\\begin{ltabulary}{|#{align}|}#{attrs}\n" \
 					"\\hline\n#{inner(el, opts)}\n" \
 					"\\end{ltabulary}#{attrs}\n\n"
+
+					if el.attr['latex-table']
+						caption = escape(el.attr['latex-caption'] || '')
+						
+						"{\n" \
+						"\\renewcommand{\\tablename}{Table}\n" \
+						"\\renewcommand{\\thetable}{#{escape(el.attr['latex-table'])}}\n" \
+						"\\captionof{table}{#{caption}}\n" \
+						"\\hypertarget{table-#{escape(el.attr['latex-table'])}}{}\\label{table-#{escape(el.attr['latex-table'])}}\n" \
+						"#{table}\n" \
+						"}\n"
+					else
+						table
+					end
+
 				else
 					table = "#{latex_link_target(el)}\\begin{tabulary}{\\textwidth}{|#{align}|}#{attrs}\n" \
 					"\\hline\n#{inner(el, opts)}\n" \
 					"\\end{tabulary}#{attrs}\n\n"
-				end
 
-				if el.attr['latex-table']
-					caption = escape(el.attr['latex-caption'] || '')
+					if el.attr['latex-table']
+						caption = escape(el.attr['latex-caption'] || '')
 					
-					if el.attr['latex-place']
-						placement = '[' + el.attr['latex-place'] + ']'
+						if el.attr['latex-place']
+							placement = '[' + el.attr['latex-place'] + ']'
+						else
+							placement = '[H]'
+						end
+					
+						"\\begin{table}#{placement}\n" \
+						"\\centering \n" \
+						"\\hypertarget{table-#{escape(el.attr['latex-table'])}}{}\\label{table-#{escape(el.attr['latex-table'])}}\n" \
+						"#{table}\n" \
+						"\\renewcommand{\\tablename}{Table}\n" \
+						"\\renewcommand{\\thetable}{#{escape(el.attr['latex-table'])}}\n" \
+						"\\caption{#{caption}}\n" \
+						"\\end{table}\n"
 					else
-						placement = '[H]'
+						table
 					end
-					
-					"\\begin{table}#{placement}\n" \
-					"\\centering \n" \
-					"#{table}\n" \
-					"\\renewcommand{\\tablename}{Table}\n" \
-					"\\renewcommand{\\thetable}{#{escape(el.attr['latex-table'])}}\n" \
-					"\\caption{#{caption}}\n" \
-					"\\hypertarget{table-#{escape(el.attr['latex-table'])}}{}\\label{table-#{escape(el.attr['latex-table'])}}\n" \
-					"\\end{table}\n"
-				else
-					table
 				end
 			end
 
