@@ -2,7 +2,9 @@ FROM ruby:slim AS gembuilder
 
 ## add gem directory
 RUN mkdir /usr/local/kramdown_latexnist
-ADD ./kramdown_latexnist /usr/local/kramdown_latexnist
+ADD ./pdf/kramdown_latexnist /usr/local/kramdown_latexnist
+# Clean out existing gems from build
+RUN rm -v /usr/local/kramdown_latexnist/kramdown-latexnist-*.gem
 WORKDIR /usr/local/kramdown_latexnist
 
 ## build gem
@@ -22,16 +24,14 @@ RUN apt-get update && \
 
 # Install libraries under ruby (gem) and python (pip)
 
-RUN gem install kramdown && \
+RUN gem install kramdown after_do && \
   pip install ruamel.yaml jinja2
 
 # Copy our utility files from the source directory
-RUN mkdir /opt/pdf
-ADD ./kramdown-latexnist ./preprocess-pdf.py /opt/pdf/
+ADD ./pdf/kramdown-latexnist ./pdf/preprocess-pdf.py /opt/pdf/
 
 # Copy our custom library from the first stage
 
-RUN mkdir /usr/local/kramdown_latexnist
 COPY --from=gembuilder /usr/local/kramdown_latexnist/kramdown-latexnist-*.gem /usr/local/kramdown_latexnist/
 
 # Install our custom kramdown library

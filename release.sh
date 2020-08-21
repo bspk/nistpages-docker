@@ -5,10 +5,17 @@ cat ./VERSION
 
 read -p '    New version number: ' VERSION
 
+# Save version in repo
 echo $VERSION > ./VERSION
+# Tag gem
+sed -i '' "s/VERSION = \".*\"/VERSION = \"$VERSION\"/" pdf/kramdown_latexnist/lib/kramdown/latexnist/version.rb
 
 echo -n 'Release version number: '
 cat ./VERSION
+
+# Rebuild
+
+./build.sh
 
 docker tag nistpages-build:latest jricher/nistpages-build:$VERSION
 docker tag nistpages-dev:latest jricher/nistpages-dev:$VERSION

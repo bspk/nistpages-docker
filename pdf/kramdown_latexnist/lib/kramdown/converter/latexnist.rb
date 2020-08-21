@@ -3,6 +3,8 @@ require 'kramdown/latexnist/version'
 
 require 'kramdown/converter/base'
 
+require 'after_do'
+
 module Kramdown
 	module Converter
 		#
@@ -129,10 +131,10 @@ module Kramdown
 						"\\begin{table}#{placement}\n" \
 						"\\centering \n" \
 						"\\hypertarget{table-#{escape(el.attr['latex-table'])}}{}\\label{table-#{escape(el.attr['latex-table'])}}\n" \
-						"#{table}\n" \
 						"\\renewcommand{\\tablename}{Table}\n" \
 						"\\renewcommand{\\thetable}{#{escape(el.attr['latex-table'])}}\n" \
 						"\\caption{#{caption}}\n" \
+						"#{table}\n" \
 						"\\end{table}\n"
 					else
 						table
@@ -222,7 +224,7 @@ module Kramdown
 					"\\begin{figure}#{placement}#{attrs}\n\\centering\n#{img}\n\n" \
 					"\\renewcommand{\\figurename}{Figure}\n" \
 					"\\renewcommand{\\thefigure}{#{child.attr['latex-fig']}}\n" \
-					"\\caption{#{escape(child.attr['alt'])}}\n" \
+					"\\caption{#{escape(child.attr['title'] || child.attr['alt'] || '')}}\n" \
 					"\\hypertarget{fig-#{child.attr['latex-fig']}}{}\\label{fig-#{child.attr['latex-fig']}}\n" \
 					"#{latex_link_target(el, true)}\n\\end{figure}#{attrs}\n"
 				else
@@ -272,3 +274,16 @@ module Kramdown
 		end
 	end
 end
+
+# Kramdown::Converter::Latexnist.extend AfterDo
+#
+# Kramdown::Converter::Latexnist.before :convert, :convert_text, :convert_ol do |el, opts, name, object|
+# 	#Kramdown::Converter::Latexnist.printelopts(el, opts)
+# 	puts "EL++++ ", el.inspect
+# 	puts "OPTS++ ", opts.inspect
+# 	puts "------ -------------------------------"
+#
+# 	#tag = Jekyll::Tags::IncludeTag.new 'include', el.value, []
+# 	#tag.inspect
+#
+# end
