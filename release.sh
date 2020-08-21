@@ -15,18 +15,29 @@ cat ./VERSION
 
 # Rebuild
 
-./build.sh
+read -p "Rebuild images? " -n 1 -r
+echo
+if [[ $REPLY =~ ^[Yy]$ ]]
+then
+    ./build.sh
+fi
 
-docker tag nistpages-build:latest jricher/nistpages-build:$VERSION
-docker tag nistpages-dev:latest jricher/nistpages-dev:$VERSION
-docker tag nistpages-pdf:latest jricher/nistpages-pdf:$VERSION
-docker tag nistpages-build:latest jricher/nistpages-build:latest
-docker tag nistpages-dev:latest jricher/nistpages-dev:latest
-docker tag nistpages-pdf:latest jricher/nistpages-pdf:latest
+read -p "Push release? " -n 1 -r
+echo
+if [[ $REPLY =~ ^[Yy]$ ]]
+then
+	docker tag nistpages-build:latest jricher/nistpages-build:$VERSION;
+	docker tag nistpages-dev:latest jricher/nistpages-dev:$VERSION;
+	docker tag nistpages-pdf:latest jricher/nistpages-pdf:$VERSION;
+	docker tag nistpages-build:latest jricher/nistpages-build:latest;
+	docker tag nistpages-dev:latest jricher/nistpages-dev:latest;
+	docker tag nistpages-pdf:latest jricher/nistpages-pdf:latest;
 
-docker push jricher/nistpages-build:$VERSION
-docker push jricher/nistpages-dev:$VERSION
-docker push jricher/nistpages-pdf:$VERSION
-docker push jricher/nistpages-build:latest
-docker push jricher/nistpages-dev:latest
-docker push jricher/nistpages-pdf:latest
+	docker push jricher/nistpages-build:$VERSION;
+	docker push jricher/nistpages-dev:$VERSION;
+	docker push jricher/nistpages-pdf:$VERSION;
+	docker push jricher/nistpages-build:latest;
+	docker push jricher/nistpages-dev:latest;
+	docker push jricher/nistpages-pdf:latest;
+fi
+
