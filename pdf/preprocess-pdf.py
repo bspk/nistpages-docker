@@ -16,6 +16,8 @@ from jinja2 import Template
 import re
 import sys
 
+VERSION = "0.9.0"
+
 # Latex template for Jinja
 latex_jinja_env = jinja2.Environment(
 	block_start_string = '\BLOCK{',
@@ -100,6 +102,10 @@ def assemble_parts(config):
     # run rendered items and configuration through the document template
     template = latex_jinja_env.get_template(os.path.join(config['basedir'], config['template']))
     latex = template.render(**vars)
+    
+    # Add our own header
+    
+    latex = ("%%%%%%\n%%%%%% Rendering pipeline version %s\n%%%%%%\n\n\n" % VERSION) + latex
     
     return latex
 

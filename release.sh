@@ -9,6 +9,8 @@ read -p '    New version number: ' VERSION
 echo $VERSION > ./VERSION
 # Tag gem
 sed -i '' "s/VERSION = \".*\"/VERSION = \"$VERSION\"/" pdf/kramdown_latexnist/lib/kramdown/latexnist/version.rb
+# Tag python script
+sed -i '' "s/VERSION = \".*\"/VERSION = \"$VERSION\"/" pdf/preprocess-pdf.py
 
 echo -n 'Release version number: '
 cat ./VERSION
