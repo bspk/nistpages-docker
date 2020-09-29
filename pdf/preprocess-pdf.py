@@ -16,7 +16,7 @@ from jinja2 import Template
 import re
 import sys
 
-VERSION = "0.9.0"
+VERSION = "0.9.1"
 
 # Latex template for Jinja
 latex_jinja_env = jinja2.Environment(
