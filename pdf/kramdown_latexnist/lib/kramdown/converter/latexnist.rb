@@ -3,7 +3,7 @@ require 'kramdown/latexnist/version'
 
 require 'kramdown/converter/base'
 
-require 'after_do'
+require 'rcapture'
 
 module Kramdown
 	module Converter
@@ -11,6 +11,8 @@ module Kramdown
 		# Converts markdown into LaTeX with special sauce
 		#
 		class Latexnist < Latex
+			
+  		  	include RCapture::Interceptable
 			
 			# Initialize the LaTeX converter with the +root+ element and the conversion +options+.
 			def initialize(root, options)
@@ -200,9 +202,7 @@ module Kramdown
 			alias convert_ol convert_ul
 
 			def convert_p(el, opts)
-				if el.attr['latex-ignore']
-					''
-				elsif el.children.size == 1 && el.children.first.type == :img &&
+				if el.children.size == 1 && el.children.first.type == :img &&
 					!(img = convert_img(el.children.first, opts)).empty?
 					convert_standalone_image(el, opts, img)
 				else
@@ -275,15 +275,17 @@ module Kramdown
 	end
 end
 
-# Kramdown::Converter::Latexnist.extend AfterDo
-#
-# Kramdown::Converter::Latexnist.before :convert, :convert_text, :convert_ol do |el, opts, name, object|
-# 	#Kramdown::Converter::Latexnist.printelopts(el, opts)
-# 	puts "EL++++ ", el.inspect
-# 	puts "OPTS++ ", opts.inspect
-# 	puts "------ -------------------------------"
-#
-# 	#tag = Jekyll::Tags::IncludeTag.new 'include', el.value, []
-# 	#tag.inspect
-#
-# end
+Kramdown::Converter::Latexnist.capture_pre :methods => [:convert_root, :convert_blank, :convert_text, :convert_p, :convert_standalone_image, 
+	:convert_codeblock, :convert_blockquote, :convert_header, :convert_hr, :convert_ul, :convert_dl, 
+	:convert_li, :convert_dt, :convert_dd, :convert_html_element, :convert_xml_comment, 
+	:convert_xml_pi, :convert_table, :convert_thead, :convert_tbody, :convert_tfoot, 
+	:convert_tr, :convert_td, :convert_comment, :convert_br, :convert_a, :convert_img, 
+	:convert_codespan, :convert_footnote, :convert_raw, :convert_em, :convert_strong, 
+	:convert_entity, :convert_typographic_sym, :convert_smart_quote, :convert_math, :convert_abbreviation]  do |ci|
+
+		el = ci.args.first
+
+		ci.predicate = !el.attr['latex-ignore']
+
+		ci.return = ''
+end

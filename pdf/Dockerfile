@@ -24,7 +24,7 @@ RUN apt-get update && \
 
 # Install libraries under ruby (gem) and python (pip)
 
-RUN gem install kramdown after_do && \
+RUN gem install kramdown rcapture && \
   pip install ruamel.yaml jinja2
 
 # Copy our utility files from the source directory

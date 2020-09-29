@@ -8,7 +8,7 @@ homepage: https://bspk.io/
 
 dependencies:
   kramdown: ~> 2.1
-  after_do: ~> 0.4.0
+  rcapture: ~> 1.0.4
 
 development_dependencies:
   bundler: ~> 1.0
