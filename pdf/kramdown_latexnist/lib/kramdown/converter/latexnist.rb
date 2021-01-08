@@ -28,8 +28,8 @@ module Kramdown
 			end
 			
 			def convert_a(el, opts)
-				url = el.attr['href']
 				
+				# render the link text
 				text = inner(el, opts)
 				
 				if el.attr['name'] # named anchor, treat like a target not a link
@@ -38,15 +38,23 @@ module Kramdown
 					else
 						"\\hypertarget{#{el.attr['name']}}{#{text}}\\label{#{el.attr['name']}}"
 					end
-				elsif url =~ /#((ref-|s-|f-|table-|fig-).*)\z/ # internal document links (should these be expanded??)
-					"\\hyperlink{#{$1.gsub('%', '\\%').gsub('#', '\\#')}}{#{text.gsub(' ', '~').gsub('-', '\\babelhyphen{nobreak}')}}" # use nonbreaking spaces
-				elsif url.start_with?('#')
-					"\\hyperlink{#{url[1..-1].gsub('%', '\\%').gsub('#', '\\#')}}{#{text}}"
-				elsif escape(url) == text # we have to check the escaped URL because the inner text might have been escaped as well
-					# displaying the actual URL, use the URL package
-					"\\url{#{url.gsub('%', '\\%').gsub('#', '\\#')}}"
 				else
-					"\\href{#{url.gsub('%', '\\%').gsub('#', '\\#')}}{#{text}}"
+					if el.attr['latex-href']: # if there's a PDF-specific link, use it
+						url = el.attr['latex-href']
+					else
+						url = el.attr['href']
+					end
+				
+					if url =~ /#((ref-|s-|f-|table-|fig-).*)\z/ # internal document links (should these be expanded??)
+						"\\hyperlink{#{$1.gsub('%', '\\%').gsub('#', '\\#')}}{#{text.gsub(' ', '~').gsub('-', '\\babelhyphen{nobreak}')}}" # use nonbreaking spaces
+					elsif url.start_with?('#')
+						"\\hyperlink{#{url[1..-1].gsub('%', '\\%').gsub('#', '\\#')}}{#{text}}"
+					elsif escape(url) == text # we have to check the escaped URL because the inner text might have been escaped as well
+						# displaying the actual URL, use the URL package
+						"\\url{#{url.gsub('%', '\\%').gsub('#', '\\#')}}"
+					else
+						"\\href{#{url.gsub('%', '\\%').gsub('#', '\\#')}}{#{text}}"
+					end
 				end
 			end
 			
@@ -275,7 +283,10 @@ module Kramdown
 	end
 end
 
-Kramdown::Converter::Latexnist.capture_pre :methods => [:convert_root, :convert_blank, :convert_text, :convert_p, :convert_standalone_image, 
+# Check for the "latex-ignore" attribute flag on any structure in the document. If
+# found, the element is not rendered. If not found, the function is called as normal.
+Kramdown::Converter::Latexnist.capture_pre :methods => 
+	[:convert_root, :convert_blank, :convert_text, :convert_p, :convert_standalone_image, 
 	:convert_codeblock, :convert_blockquote, :convert_header, :convert_hr, :convert_ul, :convert_dl, 
 	:convert_li, :convert_dt, :convert_dd, :convert_html_element, :convert_xml_comment, 
 	:convert_xml_pi, :convert_table, :convert_thead, :convert_tbody, :convert_tfoot, 
@@ -283,9 +294,9 @@ Kramdown::Converter::Latexnist.capture_pre :methods => [:convert_root, :convert_
 	:convert_codespan, :convert_footnote, :convert_raw, :convert_em, :convert_strong, 
 	:convert_entity, :convert_typographic_sym, :convert_smart_quote, :convert_math, :convert_abbreviation]  do |ci|
 
-		el = ci.args.first
+	el = ci.args.first
 
-		ci.predicate = !el.attr['latex-ignore']
+	ci.predicate = !el.attr['latex-ignore']
 
-		ci.return = ''
+	ci.return = ''
 end
