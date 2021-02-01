@@ -1,0 +1,11 @@
+version: '3'
+
+services:
+  server:
+    image: jricher/nistpages-dev
+    volumes:
+      - .:/srv/jekyll
+    #command: build -d _site/800-63-4/
+    entrypoint: jekyll build --config /site/site-defaults.yml,_config.yml,/site/site-overrides.yml --safe --verbose --trace --destination /srv/jekyll/_site/800-63-4/
+    ports:
+      - "4000:4000"

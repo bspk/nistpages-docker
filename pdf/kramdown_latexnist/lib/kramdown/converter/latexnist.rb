@@ -39,7 +39,7 @@ module Kramdown
 						"\\hypertarget{#{el.attr['name']}}{#{text}}\\label{#{el.attr['name']}}"
 					end
 				else
-					if el.attr['latex-href']: # if there's a PDF-specific link, use it
+					if el.attr['latex-href'] # if there's a PDF-specific link, use it
 						url = el.attr['latex-href']
 					else
 						url = el.attr['href']
