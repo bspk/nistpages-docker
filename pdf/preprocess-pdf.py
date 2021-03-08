@@ -5,6 +5,7 @@ Configured using the _pdf.yml configuration file.
 
 Written by Mark Sherman <mark@bspk.io> and Justin Richer <justin@bspk.io>
 """
+import os
 import os.path
 import subprocess
 from ruamel.yaml import YAML
@@ -16,7 +17,10 @@ from jinja2 import Template
 import re
 import sys
 
-VERSION = "0.9.3"
+VERSION = "0.9.4"
+
+# environment variable to target PDF renderer to single file
+PDFTARGET = os.environ.get('PDFTARGET')
 
 # Latex template for Jinja
 latex_jinja_env = jinja2.Environment(
@@ -175,6 +179,10 @@ def generate_doc():
         configs = read_yaml('_pdf.yml')
 
         for idx, config in enumerate(configs['pdf']):
+            if PDFTARGET and config['filename'] != PDFTARGET:
+                print("Skipping non-targeted PDF configuration %d: %s" % (idx, config['filename']))
+                continue
+            
             print("Processing PDF configuration %d:" % idx)
             pp.pprint(config)
             
@@ -204,6 +212,9 @@ def generate_doc():
 
 
 def main():
+    print('NIST Document PDF Rendering Toolchain %s' % VERSION)
+    if PDFTARGET:
+        print('Target PDF document: %s' % PDFTARGET)
     generate_doc()
 
 if __name__ == "__main__":

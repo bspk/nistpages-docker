@@ -11,5 +11,8 @@ services:
     image: nistpages-pdf:latest
     volumes:
        - .:/opt/source
+    environment:
+        - "PDFTARGET=${PDFTARGET}"
+        - PYTHONUNBUFFERED=1
     command: python /opt/pdf/preprocess-pdf.py
     working_dir: /opt/source
