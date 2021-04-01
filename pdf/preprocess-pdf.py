@@ -91,16 +91,17 @@ def md_to_latex(filename):
     return headers, output
 
 
-def assemble_parts(config):
+def assemble_parts(config, site):
 
     sections = map_sections(config) # pull the sections out into a keyed table
 
-    rendered = {k:collect_section(config, sections[k]) for k in sections} # run each section through the rendering pipeline
+    rendered = {k:collect_section(config, sections[k], site) for k in sections} # run each section through the rendering pipeline
 
     vars = {
         'graphicspath': create_graphics_path(config),
         'config': config,
-        'rendered': rendered
+        'rendered': rendered,
+        'site': site
     }
 
     # run rendered items and configuration through the document template
@@ -119,7 +120,7 @@ def has_section(section, rendered):
 def map_sections(config):
     return {s['name']:s for s in config['sections']}
 
-def collect_section(config, section):
+def collect_section(config, section, site):
     # loop through every file in the collection and convert it using our external kramdown converter
     collect = []
     if 'parts' in section:
@@ -135,12 +136,12 @@ def collect_section(config, section):
                 # run through a page-specific template if it exits
                 if 'template' in p:
                     template = latex_jinja_env.get_template(os.path.join(config['basedir'], p['template'])) 
-                    body = template.render(body=body, section=section, part=p, headers=headers, config=config)
+                    body = template.render(body=body, section=section, part=p, headers=headers, config=config, site=site)
             
             # run through a common section part template if it exists
             if 'part_template' in section:
                 template = latex_jinja_env.get_template(os.path.join(config['basedir'], section['part_template']))
-                body = template.render(body=body, section=section, part=p, headers=headers, config=config)
+                body = template.render(body=body, section=section, part=p, headers=headers, config=config, site=site)
         
             collect.append(body)
     
@@ -150,7 +151,7 @@ def collect_section(config, section):
     # run through a section-wide template if it exists
     if 'template' in section:
         template = latex_jinja_env.get_template(os.path.join(config['basedir'], section['template']))
-        rendered = template.render(body=rendered, section=section, config=config)
+        rendered = template.render(body=rendered, section=section, config=config, site=site)
     
     return rendered
 
@@ -174,6 +175,9 @@ def convert_to_pdf(config):
     return done
 
 def generate_doc():
+    # read in the jekyll configuration, in case we need it
+    site = read_yaml('_config.yml')
+    
     # parse our configuration document and export the resulting file
     if (os.path.exists('_pdf.yml')):
         configs = read_yaml('_pdf.yml')
@@ -188,7 +192,7 @@ def generate_doc():
             
             create_work_area(config)
             
-            body = assemble_parts(config)
+            body = assemble_parts(config, site)
             filename = os.path.join(fileworkdir(config), config['filename'] + '.tex')
             print("Writing LaTeX file %s" % filename)
             with open(filename, 'w') as f:
