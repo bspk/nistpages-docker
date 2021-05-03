@@ -263,6 +263,17 @@ module Kramdown
 				"#{latex_link_target(el)}#{inner(el, opts)}\n\n"
 			end
 
+			def convert_strong(el, opts)
+				# render the link text
+				text = inner(el, opts)
+				if ["SHALL", "SHALL NOT", "SHOULD", "SHOULD NOT", "MAY", "NEED NOT", "CAN", "CANNOT", "CAPITALS"].include?(text)
+					"\\colorbox{gray!10}{\\textbf{\\textsf{\\small{#{latex_link_target(el)}#{text}}}}}"
+				else
+					"\\textbf{#{latex_link_target(el)}#{text}}"
+				end
+			end
+
+
 			# Wrap the +text+ inside a LaTeX environment of type +type+. The element +el+ is passed on to
 			# the method #attribute_list -- the resulting string is appended to both the \\begin and the
 			# \\end lines of the LaTeX environment for easier post-processing of LaTeX environments.
