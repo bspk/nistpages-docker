@@ -17,7 +17,7 @@ from jinja2 import Template
 import re
 import sys
 
-VERSION = "0.10.0"
+VERSION = "0.10.1"
 
 # environment variable to target PDF renderer to single file
 PDFTARGET = os.environ.get('PDFTARGET')
