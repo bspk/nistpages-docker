@@ -267,7 +267,7 @@ module Kramdown
 				# render the link text
 				text = inner(el, opts)
 				if ["SHALL", "SHALL NOT", "SHOULD", "SHOULD NOT", "MAY", "NEED NOT", "CAN", "CANNOT", "CAPITALS"].include?(text)
-					"\\colorbox{gray!10}{\\textsf{\\small{#{latex_link_target(el)}#{text}}}}"
+					"\\colorbox{gray!10}{\\textbf{\\footnotesize{#{latex_link_target(el)}#{text}}}}"
 				else
 					"\\textbf{#{latex_link_target(el)}#{text}}"
 				end
