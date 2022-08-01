@@ -153,11 +153,7 @@ module Kramdown
 			end
 
 			def convert_tr(el, opts)
-				if opts[:thead]
-					rowflags = "\\rowcolor{black}"
-				else
-					rowflags = ""
-				end
+				rowflags = ""
 				
 				"#{rowflags}" << \
 				el.children.map {|c| send("convert_#{c.type}", c, opts) }.join(' & ') << "\\\\ \\hline\n"
@@ -167,7 +163,7 @@ module Kramdown
 				options = opts.dup.merge(:td => true) #flag everything inside as part of a table header
 				if opts[:thead]
 					# table header
-					"\\raggedright\\arraybackslash\\textcolor{white}{\\textbf{#{inner(el, options)}}}"
+					"\\raggedright\\arraybackslash\\textbf{#{inner(el, options)}}"
 				else
 					# table body
 					inner(el, options)
