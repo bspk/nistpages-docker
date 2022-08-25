@@ -45,11 +45,17 @@ module Kramdown
 						url = el.attr['href']
 					end
 				
-					if url =~ /#((ref-|s-|f-|table-|fig-).*)\z/ # internal document links (should these be expanded??)
+					if url =~ /#(.*)\z/ && !(url.start_with?('http') || url.start_with?('mailto'))
+						
+						 # internal document links (should these be expanded??)
 						"\\hyperlink{#{$1.gsub('%', '\\%').gsub('#', '\\#')}}{#{text.gsub(' ', '~').gsub('-', '\\babelhyphen{nobreak}')}}" # use nonbreaking spaces
 					elsif url.start_with?('#')
+						# Bare hash reference (internal to document)
+						# [text](#anchor)
 						"\\hyperlink{#{url[1..-1].gsub('%', '\\%').gsub('#', '\\#')}}{#{text}}"
-					elsif escape(url) == text # we have to check the escaped URL because the inner text might have been escaped as well
+						
+					elsif escape(url) == text# we have to check the escaped URL because the inner text might have been escaped as well
+						# URL Literal <http://url.example/>
 						# displaying the actual URL, use the URL package
 						"\\url{#{url.gsub('%', '\\%').gsub('#', '\\#')}}"
 					else
