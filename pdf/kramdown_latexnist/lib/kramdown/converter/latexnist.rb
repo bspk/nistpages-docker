@@ -76,7 +76,7 @@ module Kramdown
 				elsif !src.empty?
 					@data[:packages] << 'graphicx'
 				
-					img = "#{latex_link_target(el)}\\includegraphics[width=\\linewidth]{#{src}}"
+					img = "#{latex_link_target(el)}\\includegraphics[width=\\linewidth,height=\\textheight,keepaspectratio]{#{src}}"
 					
 					if opts[:td]
 						# we're in a table cell, wrap the image in an environment to get it to play nice
