@@ -4,7 +4,7 @@ FROM ruby:slim AS gembuilder
 RUN mkdir /usr/local/kramdown_latexnist
 ADD ./pdf/kramdown_latexnist /usr/local/kramdown_latexnist
 # Clean out existing gems from build
-RUN rm -v /usr/local/kramdown_latexnist/kramdown-latexnist-*.gem
+RUN rm -f /usr/local/kramdown_latexnist/kramdown-latexnist-*.gem
 WORKDIR /usr/local/kramdown_latexnist
 
 ## build gem
