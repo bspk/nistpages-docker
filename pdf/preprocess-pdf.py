@@ -137,7 +137,13 @@ def collect_section(config, section, site):
                 if 'template' in p:
                     template = latex_jinja_env.get_template(os.path.join(config['basedir'], p['template'])) 
                     body = template.render(body=body, section=section, part=p, headers=headers, config=config, site=site)
-            
+            elif 'template' in p:
+                # it's an object but only has the 'template' and no content, treat the body and header as empty
+                headers = {}
+                body = ''
+                template = latex_jinja_env.get_template(os.path.join(config['basedir'], p['template']))
+                body = template.render(body=body, section=section, part=p, headers=headers, config=config, site=site) 
+							           
             # run through a common section part template if it exists
             if 'part_template' in section:
                 template = latex_jinja_env.get_template(os.path.join(config['basedir'], section['part_template']))
