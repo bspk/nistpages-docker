@@ -174,9 +174,9 @@ def fileworkdir(config):
     return os.path.join(config['basedir'], config['workdir'], config['filename'])
 
 def convert_to_pdf(config):
-    # run pdflatex to do the converstion
+    # run lualatex to do the converstion
     
-    done = subprocess.run(['pdflatex', '-interaction=nonstopmode', '-halt-on-error', config['filename'] + '.tex'], cwd=fileworkdir(config), capture_output=True)
+    done = subprocess.run(['lualatex', '-interaction=nonstopmode', '-halt-on-error', config['filename'] + '.tex'], cwd=fileworkdir(config), capture_output=True)
     
     return done
 
@@ -205,14 +205,14 @@ def generate_doc():
                 f.write(body)
             
             
-            runs = 2 # run pdflatex twice to generate TOC
+            runs = 2 # run lualatex twice to generate TOC
             filename = os.path.join(fileworkdir(config), config['filename'] + '.pdf')
             for x in range(runs):
                 print("(%d/%d) Converting PDF file" % (x + 1, runs))
                 pdflog = convert_to_pdf(config)
                 sys.stdout.buffer.write(pdflog.stdout)
                 if pdflog.returncode:
-                    print('PDFLatex Process returned exit code: ' + str(pdflog.returncode))
+                    print('LuaLatex Process returned exit code: ' + str(pdflog.returncode))
                     sys.exit(pdflog.returncode)
                 
                 print("(%d/%d) PDF File Written to %s" % (x + 1, runs, filename))
