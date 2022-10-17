@@ -232,11 +232,14 @@ module Kramdown
 						placement = '[h]'
 					end
 					"\\begin{figure}#{placement}#{attrs}\n\\centering\n#{img}\n\n" \
+					"\\tagstructbegin{tag=Figure,alttext={#{escape(child.attr['alt'])}}}\n" \
+					"\\tagmcbegin{tag=Figure}\n" \
 					"\\renewcommand{\\figurename}{Figure}\n" \
 					"\\renewcommand{\\thefigure}{#{child.attr['latex-fig']}}\n" \
 					"\\caption{#{escape(child.attr['title'] || child.attr['alt'] || '')}}\n" \
 					"\\hypertarget{fig-#{child.attr['latex-fig']}}{}\\label{fig-#{child.attr['latex-fig']}}\n" \
-					"#{latex_link_target(el, true)}\n\\end{figure}#{attrs}\n"
+					"#{latex_link_target(el, true)}\n\\end{figure}#{attrs}\n" \
+					"\\tagmcend\\tagstructend\n"
 				else
 					super
 				end
