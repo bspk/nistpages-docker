@@ -231,15 +231,20 @@ module Kramdown
 					else
 						placement = '[h]'
 					end
-					"\\begin{figure}#{placement}#{attrs}\n\\centering\n#{img}\n\n" \
-					"\\tagstructbegin{tag=Figure,alttext={#{escape(child.attr['alt'])}}}\n" \
+					"\\begin{figure}#{placement}#{attrs}\\tagpdfparaOff\n\\centering\n" \
+					"\\newcommand\\myalttext{#{escape(child.attr['alt'])}}\n" \
+					"\\tagstructbegin{tag=Figure,alttext=\\myalttext}\n" \
 					"\\tagmcbegin{tag=Figure}\n" \
+					"#{img}\n\n" \
+					"\\tagmcend\n" \
+					"\\tagstructbegin{tag=Caption}\n" \
+					"\\tagmcbegin{tag=Caption}\n" \
 					"\\renewcommand{\\figurename}{Figure}\n" \
 					"\\renewcommand{\\thefigure}{#{child.attr['latex-fig']}}\n" \
 					"\\caption{#{escape(child.attr['title'] || child.attr['alt'] || '')}}\n" \
 					"\\hypertarget{fig-#{child.attr['latex-fig']}}{}\\label{fig-#{child.attr['latex-fig']}}\n" \
+					"\\tagmcend\n\\tagstructend\n\\tagstructend\n\\tagpdfparaOn\n"\
 					"#{latex_link_target(el, true)}\n\\end{figure}#{attrs}\n" \
-					"\\tagmcend\\tagstructend\n"
 				else
 					super
 				end
