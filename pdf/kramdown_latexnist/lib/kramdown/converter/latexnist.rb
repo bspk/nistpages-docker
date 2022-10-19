@@ -167,7 +167,7 @@ module Kramdown
 
 			def convert_tr(el, opts)
 				rowflags = ""
-				"\\tagstructbegin{tag=TR}\n" \
+				"\\tagstructbegin{tag=TR}\n" << \
 				"#{rowflags}" << \
 				el.children.map {|c| send("convert_#{c.type}", c, opts) }.join(' & ') << "\\\\ \\hline\n\\tagstructend\n"
 			end
@@ -176,12 +176,12 @@ module Kramdown
 				options = opts.dup.merge(:td => true) #flag everything inside as part of a table header
 				if opts[:thead]
 					# table header
-					"\\tagmcbegin{tag=TR}" \
+					"\\tagmcbegin{tag=TR}" << \
 					"\\raggedright\\arraybackslash\\textbf{#{inner(el, options)}}" << \
 					"\\tagmcend"
 				else
 					# table body
-					"\\tagmcbegin{tag=TR}" \
+					"\\tagmcbegin{tag=TR}" << \
 					inner(el, options) << \
 					"\\tagmcend"
 				end
@@ -243,8 +243,8 @@ module Kramdown
 						placement = '[h]'
 					end
 					"\\begin{figure}#{placement}#{attrs}\\tagpdfparaOff\n\\centering\n" \
-					"\\newcommand\myalttext{#{escape(child.attr['alt'])}}\n" \
-					"\\tagstructbegin{tag=Figure,alttext=\\myalttext}\n" \
+					"\\newcommand\\myalttext{#{escape(child.attr['alt'])}}\n" \
+					"\\tagstructbegin{tag=Figure,alttext=\myalttext}\n" \
 					"\\tagmcbegin{tag=Figure}\n" \
 					"#{img}\n\n" \
 					"\\tagmcend\n" \
