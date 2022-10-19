@@ -120,12 +120,16 @@ module Kramdown
 						caption = escape(el.attr['latex-caption'] || '')
 						
 						"{\n" \
+						"\\tagpdfparaOff\n\\tagstructbegin{tag=Span}\n" \
 						"\\renewcommand{\\tablename}{Table}\n" \
 						"\\renewcommand{\\thetable}{#{escape(el.attr['latex-table'])}}\n" \
 						"\\captionof{table}{#{caption}}\n" \
 						"\\hypertarget{table-#{escape(el.attr['latex-table'])}}{}\\label{table-#{escape(el.attr['latex-table'])}}\n" \
+						"\\tagstructbegin{tag=Table}\n" \
 						"#{table}\n" \
-						"}\n"
+						"}\n" \
+						"\\tagstructend\n" \
+						"\n\\tagpdfparaOn\n\\tagstructend\n"
 					else
 						table
 					end
@@ -143,15 +147,18 @@ module Kramdown
 						else
 							placement = '[H]'
 						end
-					
+						"\\tagpdfparaOff\n\\tagstructbegin{tag=Span}\n" \
 						"\\begin{table}#{placement}\n" \
 						"\\centering \n" \
 						"\\hypertarget{table-#{escape(el.attr['latex-table'])}}{}\\label{table-#{escape(el.attr['latex-table'])}}\n" \
 						"\\renewcommand{\\tablename}{Table}\n" \
 						"\\renewcommand{\\thetable}{#{escape(el.attr['latex-table'])}}\n" \
 						"\\caption{#{caption}}\n" \
+						"\\tagstructbegin{tag=Table}\n" \
 						"#{table}\n" \
-						"\\end{table}\n"
+						"\\tagstructend\n" \
+						"\\end{table}\n" \
+						"\n\\tagpdfparaOn\n\\tagstructend\n"
 					else
 						table
 					end
@@ -160,19 +167,23 @@ module Kramdown
 
 			def convert_tr(el, opts)
 				rowflags = ""
-				
+				"\\tagstructbegin{tag=TR}\n" \
 				"#{rowflags}" << \
-				el.children.map {|c| send("convert_#{c.type}", c, opts) }.join(' & ') << "\\\\ \\hline\n"
+				el.children.map {|c| send("convert_#{c.type}", c, opts) }.join(' & ') << "\\\\ \\hline\n\\tagstructend\n"
 			end
 
 			def convert_td(el, opts)
 				options = opts.dup.merge(:td => true) #flag everything inside as part of a table header
 				if opts[:thead]
 					# table header
-					"\\raggedright\\arraybackslash\\textbf{#{inner(el, options)}}"
+					"\\tagmcbegin{tag=TR}" \
+					"\\raggedright\\arraybackslash\\textbf{#{inner(el, options)}}" << \
+					"\\tagmcend"
 				else
 					# table body
-					inner(el, options)
+					"\\tagmcbegin{tag=TR}" \
+					inner(el, options) << \
+					"\\tagmcend"
 				end
 			end
 			
@@ -232,7 +243,7 @@ module Kramdown
 						placement = '[h]'
 					end
 					"\\begin{figure}#{placement}#{attrs}\\tagpdfparaOff\n\\centering\n" \
-					"\\newcommand\\myalttext{#{escape(child.attr['alt'])}}\n" \
+					"\\newcommand\myalttext{#{escape(child.attr['alt'])}}\n" \
 					"\\tagstructbegin{tag=Figure,alttext=\\myalttext}\n" \
 					"\\tagmcbegin{tag=Figure}\n" \
 					"#{img}\n\n" \
