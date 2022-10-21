@@ -112,24 +112,26 @@ module Kramdown
 				end
 				
 				if el.attr['latex-longtable']
+					options = opts.dup.merge(:td => true)
 					table = "#{latex_link_target(el)}\\begin{ltabulary}{|#{align}|}#{attrs}\n" \
-					"\\hline\n#{inner(el, opts)}\n" \
-					"\\end{ltabulary}#{attrs}\n\n"
+					"\\hline\n" \
+					"#{inner(el, options)}\n" \
+					"\\end{ltabulary}#{attrs}\n"
 
 					if el.attr['latex-table']
 						caption = escape(el.attr['latex-caption'] || '')
 						
 						"{\n" \
-						"\\tagpdfparaOff\n\\tagstructbegin{tag=Span}\n" \
+						"\\tagpdfparaOff\n" \
 						"\\renewcommand{\\tablename}{Table}\n" \
 						"\\renewcommand{\\thetable}{#{escape(el.attr['latex-table'])}}\n" \
 						"\\captionof{table}{#{caption}}\n" \
 						"\\hypertarget{table-#{escape(el.attr['latex-table'])}}{}\\label{table-#{escape(el.attr['latex-table'])}}\n" \
 						"\\tagstructbegin{tag=Table}\n" \
 						"#{table}\n" \
-						"}\n" \
 						"\\tagstructend\n" \
-						"\n\\tagpdfparaOn\n\\tagstructend\n"
+						"\\tagpdfparaOn\n" \
+						"}\n" \
 					else
 						table
 					end
