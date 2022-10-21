@@ -135,9 +135,11 @@ module Kramdown
 					end
 
 				else
+					options = opts.dup.merge(:td => true)
 					table = "#{latex_link_target(el)}\\begin{tabulary}{\\textwidth}{|#{align}|}#{attrs}\n" \
-					"\\hline\n#{inner(el, opts)}\n" \
-					"\\end{tabulary}#{attrs}\n\n"
+					"\\hline\n" \
+					"#{inner(el, options)}\n" \
+					"\\end{tabulary}#{attrs}\n"
 
 					if el.attr['latex-table']
 						caption = escape(el.attr['latex-caption'] || '')
@@ -147,49 +149,66 @@ module Kramdown
 						else
 							placement = '[H]'
 						end
-						"\\tagpdfparaOff\n\\tagstructbegin{tag=Span}\n" \
+						"\\tagpdfparaOff\n" \
 						"\\begin{table}#{placement}\n" \
 						"\\centering \n" \
 						"\\hypertarget{table-#{escape(el.attr['latex-table'])}}{}\\label{table-#{escape(el.attr['latex-table'])}}\n" \
 						"\\renewcommand{\\tablename}{Table}\n" \
 						"\\renewcommand{\\thetable}{#{escape(el.attr['latex-table'])}}\n" \
+						"\\tagstructbegin{tag=Caption}\\tagmcbegin{tag=Caption}" \
 						"\\caption{#{caption}}\n" \
+						"\\tagmcend\\tagstructend\n" \
 						"\\tagstructbegin{tag=Table}\n" \
 						"#{table}\n" \
 						"\\tagstructend\n" \
 						"\\end{table}\n" \
-						"\n\\tagpdfparaOn\n\\tagstructend\n"
+						"\\tagpdfparaOn\n"
 					else
 						table
 					end
 				end
 			end
-
+			
 			def convert_tr(el, opts)
 				rowflags = ""
-				"\\tagstructbegin{tag=TR}\n" << \
-				"#{rowflags}" << \
-				el.children.map {|c| send("convert_#{c.type}", c, opts) }.join(' & ') << "\\\\ \\hline\n\\tagstructend\n"
+				if opts[:parent].children.last != el
+					"#{rowflags}\\tagstructbegin{tag=TR} %start row\n" << \
+					el.children.map {|c| send("convert_#{c.type}", c, opts) }.join(' & ') << "\n\\tagstructend %end row\n\\\\ \\hline\n"
+				else
+					# last table row requires special treatment with hline
+					"#{rowflags}\\tagstructbegin{tag=TR} %start row\n" << \
+					el.children.map {|c| send("convert_#{c.type}", c, opts) }.join(' & ') << "\n\\tagstructend %last row\n"					
+				end
 			end
 
 			def convert_td(el, opts)
-				options = opts.dup.merge(:td => true) #flag everything inside as part of a table header
+				#options = opts.dup.merge(:td => true) #flag everything inside as part of a table header
 				if opts[:thead]
 					# table header
-					"\\tagmcbegin{tag=TR}" << \
-					"\\raggedright\\arraybackslash\\textbf{#{inner(el, options)}}" << \
-					"\\tagmcend"
-				else
+					"\\raggedright\\arraybackslash\\tagstructbegin{tag=TH}\\tagmcbegin{tag=TH}\\textbf{#{inner(el, options)}}\\tagmcend\\tagstructend"
+				elsif opts[:td]
 					# table body
-					"\\tagmcbegin{tag=TR}" << \
+					"\\tagmcbegin{tag=TD}" << \
 					inner(el, options) << \
 					"\\tagmcend"
+				else
+					# shouldn't happen with basic tables
+					inner(el, options)
 				end
 			end
 			
 			def convert_thead(el, opts)
 				options = opts.dup.merge(:thead => true) #flag everything inside as part of a table header
-				"#{inner(el, options)}\n"
+				"\\tagstructbegin{tag=THead}\n" << \
+				"#{inner(el, options)}\n" << \
+				"\\tagstructend %end tHead\n\\\\ \\hline"	
+			end
+			
+			def convert_tbody(el, opts)
+				options = opts.dup.merge(:td => true) # flag rest of cells as data cells
+				"\\tagstructbegin{tag=TBody}%start table body\n" << \
+				inner(el, options) << \
+				"\\tagstructend %end tBody%end table body\n\\\\ \\hline"
 			end
 			
 			def convert_header(el, opts)
