@@ -229,27 +229,48 @@ module Kramdown
 				end
 			end
 
+			# list tagging relies on tagpdf's underlying support for automatic paragraph tagging.
+			# Note: This could be finicky.  If it is, use the :list key to turn off automatic paragraph 
+			# tagging if and only if we're not in a nested table
 			def convert_ul(el, opts)
 				if !@data[:has_toc] && (el.options[:ial][:refs].include?('toc') rescue nil)
 					@data[:has_toc] = true
 					'\tableofcontents'
 				else
+					result = +''
+					options = opts.dup.merge(:list => true) #flag that we're already in a list to identify nesting		
 					if el.attr['class'] && el.attr['class'] == 'letter-list'
-						latex_environment('enumerate', el, inner(el, opts), '[label=\alph*)]')
+						result << "\\tagstructbegin{tag=L}\n"
+						result << latex_environment('enumerate', el, inner(el, options), '[label=\alph*)]')
+						result << "\\tagstructend\n\n" 
 					else
-						latex_environment(el.type == :ul ? 'itemize' : 'enumerate', el, inner(el, opts))
-					end
+						result << "\\tagstructbegin{tag=L}\n"
+						result << latex_environment(el.type == :ul ? 'itemize' : 'enumerate', el, inner(el, options))
+						result << "\\tagstructend\n\n"
+					end	
+					result
 				end
 			end
 			alias convert_ol convert_ul
 
+			# convert list item
+			# Note the hard paragraph end (\par) at the end of list item to force paragraph end tagging *before* list end tagging
+			# ToDo: test more complicated breakage conditions, such as multi-paragraph lists or lists of images
+			def convert_li(el, opts)
+				"\\tagstructbegin{tag=LI}\n" \
+				"\\item{} \\tagstructbegin{tag=LBody}#{latex_link_target(el, true)}#{inner(el, opts).sub(/\n+\Z/, '')}\\par\\tagstructend\n" \
+				"\\tagstructend  %end li\n"
+			end
+
 			def convert_p(el, opts)
+				result = +''
 				if el.children.size == 1 && el.children.first.type == :img &&
 					!(img = convert_img(el.children.first, opts)).empty?
-					convert_standalone_image(el, opts, img)
+					result << convert_standalone_image(el, opts, img)
 				else
-					"#{latex_link_target(el)}#{inner(el, opts)}\n\n"
+					result << "#{latex_link_target(el)}#{inner(el, opts)}\n\n"
 				end
+				result
 			end
 
 			# Helper method used by +convert_p+ to convert a paragraph that only contains a single :img
