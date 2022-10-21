@@ -265,7 +265,7 @@ module Kramdown
 					end
 					"\\begin{figure}#{placement}#{attrs}\\tagpdfparaOff\n\\centering\n" \
 					"\\newcommand\\myalttext{#{escape(child.attr['alt'])}}\n" \
-					"\\tagstructbegin{tag=Figure,alttext=\myalttext}\n" \
+					"\\tagstructbegin{tag=Figure,alttext=\\myalttext}\n" \
 					"\\tagmcbegin{tag=Figure}\n" \
 					"#{img}\n\n" \
 					"\\tagmcend\n" \
