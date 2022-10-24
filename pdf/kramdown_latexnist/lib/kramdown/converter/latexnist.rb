@@ -317,13 +317,54 @@ module Kramdown
 					(c.type != :text || c.value !~ /^\s*\n/)
 				res
 			end
+			
+			def convert_dl(el, opts)
+				# follow the model for unordered lists -- nesting shouldn't happen, but flag it in case 
+				result = +''
+				options = opts.dup.merge(:list => true) #flag that we're already in a list to identify nesting	
+				result << "\\tagstructbegin{tag=L}\n"
+				result << latex_environment('description', el, inner(el, options))
+				result << "\\tagstructend\n\n" 
+				result
+			end
 
 			def convert_dt(el, opts)
-				"\\item[#{inner(el, opts)}] \\hfill \\\\ "
+				result = +''
+				# if its the first term, start a list item
+				if opts[:parent].children.first == el || opts[:parent].children[opts[:index]-1].type != el.type
+					result << "\\tagstructbegin{tag=LI}\n" 
+				end
+				
+				# turning off paragraph tagging only for the definition term. 
+				#  NOTE: This could be buggy, particularly for long terms. It may be necessary 
+				#  to keep it on and deal with the extraneous paragraph tags it generates here.
+				result << "\\tagstructbegin{tag=H3}"
+				result << "\\tagpdfparaOff\\tagmcbegin{tag=H3}\\item[#{inner(el, opts)}] \\tagmcend \\hfill \\\\ \\tagpdfparaOn"
+				result << "\\tagstructend %end lbl\n"
+
+				# if its the last element (it shouldn't be), end the list item
+				if opts[:parent].children.last == el 
+					result << "\\tagstructend % end li\n"
+				end
+				result
 			end
 
 			def convert_dd(el, opts)
-				"#{latex_link_target(el)}#{inner(el, opts)}\n\n"
+				result = +''
+				# it shouldn't be the first item, but if it is, start the list item
+				if opts[:parent].children.first == el
+					result << "\\tagstructbegin{tag=LI}\n" 
+				end
+				
+				result << "\\tagstructbegin{tag=LBody}"
+				result << "#{latex_link_target(el)}#{inner(el, opts)}"
+				result << "\\tagstructend\n"
+				
+				# if its the last element, end the list item
+				if opts[:parent].children.last == el || opts[:parent].children[opts[:index]+1].type != el.type
+					result << "\\tagstructend %end def item\n\n"
+				end
+				result
 			end
 
 			def convert_strong(el, opts)
