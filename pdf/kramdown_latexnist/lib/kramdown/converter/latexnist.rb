@@ -112,28 +112,36 @@ module Kramdown
 				end
 				
 				if el.attr['latex-longtable']
+					options = opts.dup.merge(:td => true)
 					table = "#{latex_link_target(el)}\\begin{ltabulary}{|#{align}|}#{attrs}\n" \
-					"\\hline\n#{inner(el, opts)}\n" \
-					"\\end{ltabulary}#{attrs}\n\n"
+					"\\hline\n" \
+					"#{inner(el, options)}\n" \
+					"\\end{ltabulary}#{attrs}\n"
 
 					if el.attr['latex-table']
 						caption = escape(el.attr['latex-caption'] || '')
 						
 						"{\n" \
+						"\\tagpdfparaOff\n" \
 						"\\renewcommand{\\tablename}{Table}\n" \
 						"\\renewcommand{\\thetable}{#{escape(el.attr['latex-table'])}}\n" \
 						"\\captionof{table}{#{caption}}\n" \
 						"\\hypertarget{table-#{escape(el.attr['latex-table'])}}{}\\label{table-#{escape(el.attr['latex-table'])}}\n" \
+						"\\tagstructbegin{tag=Table}\n" \
 						"#{table}\n" \
-						"}\n"
+						"\\tagstructend\n" \
+						"\\tagpdfparaOn\n" \
+						"}\n" \
 					else
 						table
 					end
 
 				else
+					options = opts.dup.merge(:td => true)
 					table = "#{latex_link_target(el)}\\begin{tabulary}{\\textwidth}{|#{align}|}#{attrs}\n" \
-					"\\hline\n#{inner(el, opts)}\n" \
-					"\\end{tabulary}#{attrs}\n\n"
+					"\\hline\n" \
+					"#{inner(el, options)}\n" \
+					"\\end{tabulary}#{attrs}\n"
 
 					if el.attr['latex-table']
 						caption = escape(el.attr['latex-caption'] || '')
@@ -143,42 +151,66 @@ module Kramdown
 						else
 							placement = '[H]'
 						end
-					
+						"\\tagpdfparaOff\n" \
 						"\\begin{table}#{placement}\n" \
 						"\\centering \n" \
 						"\\hypertarget{table-#{escape(el.attr['latex-table'])}}{}\\label{table-#{escape(el.attr['latex-table'])}}\n" \
 						"\\renewcommand{\\tablename}{Table}\n" \
 						"\\renewcommand{\\thetable}{#{escape(el.attr['latex-table'])}}\n" \
+						"\\tagstructbegin{tag=Caption}\\tagmcbegin{tag=Caption}" \
 						"\\caption{#{caption}}\n" \
+						"\\tagmcend\\tagstructend\n" \
+						"\\tagstructbegin{tag=Table}\n" \
 						"#{table}\n" \
-						"\\end{table}\n"
+						"\\tagstructend\n" \
+						"\\end{table}\n" \
+						"\\tagpdfparaOn\n"
 					else
 						table
 					end
 				end
 			end
-
+			
 			def convert_tr(el, opts)
 				rowflags = ""
-				
-				"#{rowflags}" << \
-				el.children.map {|c| send("convert_#{c.type}", c, opts) }.join(' & ') << "\\\\ \\hline\n"
+				if opts[:parent].children.last != el
+					"#{rowflags}\\tagstructbegin{tag=TR} %start row\n" << \
+					el.children.map {|c| send("convert_#{c.type}", c, opts) }.join(' & ') << "\n\\tagstructend %end row\n\\\\ \\hline\n"
+				else
+					# last table row requires special treatment with hline
+					"#{rowflags}\\tagstructbegin{tag=TR} %start row\n" << \
+					el.children.map {|c| send("convert_#{c.type}", c, opts) }.join(' & ') << "\n\\tagstructend %last row\n"					
+				end
 			end
 
 			def convert_td(el, opts)
-				options = opts.dup.merge(:td => true) #flag everything inside as part of a table header
+				#options = opts.dup.merge(:td => true) #flag everything inside as part of a table header
 				if opts[:thead]
 					# table header
-					"\\raggedright\\arraybackslash\\textbf{#{inner(el, options)}}"
-				else
+					"\\raggedright\\arraybackslash\\tagstructbegin{tag=TH}\\tagmcbegin{tag=TH}\\textbf{#{inner(el, options)}}\\tagmcend\\tagstructend"
+				elsif opts[:td]
 					# table body
+					"\\tagmcbegin{tag=TD}" << \
+					inner(el, options) << \
+					"\\tagmcend"
+				else
+					# shouldn't happen with basic tables
 					inner(el, options)
 				end
 			end
 			
 			def convert_thead(el, opts)
 				options = opts.dup.merge(:thead => true) #flag everything inside as part of a table header
-				"#{inner(el, options)}\n"
+				"\\tagstructbegin{tag=THead}\n" << \
+				"#{inner(el, options)}\n" << \
+				"\\tagstructend %end tHead\n\\\\ \\hline"	
+			end
+			
+			def convert_tbody(el, opts)
+				options = opts.dup.merge(:td => true) # flag rest of cells as data cells
+				"\\tagstructbegin{tag=TBody}%start table body\n" << \
+				inner(el, options) << \
+				"\\tagstructend %end tBody%end table body\n\\\\ \\hline"
 			end
 			
 			def convert_header(el, opts)
@@ -197,27 +229,48 @@ module Kramdown
 				end
 			end
 
+			# list tagging relies on tagpdf's underlying support for automatic paragraph tagging.
+			# Note: This could be finicky.  If it is, use the :list key to turn off automatic paragraph 
+			# tagging if and only if we're not in a nested table
 			def convert_ul(el, opts)
 				if !@data[:has_toc] && (el.options[:ial][:refs].include?('toc') rescue nil)
 					@data[:has_toc] = true
 					'\tableofcontents'
 				else
+					result = +''
+					options = opts.dup.merge(:list => true) #flag that we're already in a list to identify nesting		
 					if el.attr['class'] && el.attr['class'] == 'letter-list'
-						latex_environment('enumerate', el, inner(el, opts), '[label=\alph*)]')
+						result << "\\tagstructbegin{tag=L}\n"
+						result << latex_environment('enumerate', el, inner(el, options), '[label=\alph*)]')
+						result << "\\tagstructend\n\n" 
 					else
-						latex_environment(el.type == :ul ? 'itemize' : 'enumerate', el, inner(el, opts))
-					end
+						result << "\\tagstructbegin{tag=L}\n"
+						result << latex_environment(el.type == :ul ? 'itemize' : 'enumerate', el, inner(el, options))
+						result << "\\tagstructend\n\n"
+					end	
+					result
 				end
 			end
 			alias convert_ol convert_ul
 
+			# convert list item
+			# Note the hard paragraph end (\par) at the end of list item to force paragraph end tagging *before* list end tagging
+			# ToDo: test more complicated breakage conditions, such as multi-paragraph lists or lists of images
+			def convert_li(el, opts)
+				"\\tagstructbegin{tag=LI}\n" \
+				"\\item{} \\tagstructbegin{tag=LBody}#{latex_link_target(el, true)}#{inner(el, opts).sub(/\n+\Z/, '')}\\par\\tagstructend\n" \
+				"\\tagstructend  %end li\n"
+			end
+
 			def convert_p(el, opts)
+				result = +''
 				if el.children.size == 1 && el.children.first.type == :img &&
 					!(img = convert_img(el.children.first, opts)).empty?
-					convert_standalone_image(el, opts, img)
+					result << convert_standalone_image(el, opts, img)
 				else
-					"#{latex_link_target(el)}#{inner(el, opts)}\n\n"
+					result << "#{latex_link_target(el)}#{inner(el, opts)}\n\n"
 				end
+				result
 			end
 
 			# Helper method used by +convert_p+ to convert a paragraph that only contains a single :img
@@ -231,12 +284,20 @@ module Kramdown
 					else
 						placement = '[h]'
 					end
-					"\\begin{figure}#{placement}#{attrs}\n\\centering\n#{img}\n\n" \
+					"\\begin{figure}#{placement}#{attrs}\\tagpdfparaOff\n\\centering\n" \
+					"\\newcommand\\myalttext{#{escape(child.attr['alt'])}}\n" \
+					"\\tagstructbegin{tag=Figure,alttext=\\myalttext}\n" \
+					"\\tagmcbegin{tag=Figure}\n" \
+					"#{img}\n\n" \
+					"\\tagmcend\n" \
+					"\\tagstructbegin{tag=Caption}\n" \
+					"\\tagmcbegin{tag=Caption}\n" \
 					"\\renewcommand{\\figurename}{Figure}\n" \
 					"\\renewcommand{\\thefigure}{#{child.attr['latex-fig']}}\n" \
 					"\\caption{#{escape(child.attr['title'] || child.attr['alt'] || '')}}\n" \
 					"\\hypertarget{fig-#{child.attr['latex-fig']}}{}\\label{fig-#{child.attr['latex-fig']}}\n" \
-					"#{latex_link_target(el, true)}\n\\end{figure}#{attrs}\n"
+					"\\tagmcend\n\\tagstructend\n\\tagstructend\n\\tagpdfparaOn\n"\
+					"#{latex_link_target(el, true)}\n\\end{figure}#{attrs}\n" \
 				else
 					super
 				end
@@ -256,13 +317,54 @@ module Kramdown
 					(c.type != :text || c.value !~ /^\s*\n/)
 				res
 			end
+			
+			def convert_dl(el, opts)
+				# follow the model for unordered lists -- nesting shouldn't happen, but flag it in case 
+				result = +''
+				options = opts.dup.merge(:list => true) #flag that we're already in a list to identify nesting	
+				result << "\\tagstructbegin{tag=L}\n"
+				result << latex_environment('description', el, inner(el, options))
+				result << "\\tagstructend\n\n" 
+				result
+			end
 
 			def convert_dt(el, opts)
-				"\\item[#{inner(el, opts)}] \\hfill \\\\ "
+				result = +''
+				# if its the first term, start a list item
+				if opts[:parent].children.first == el || opts[:parent].children[opts[:index]-1].type != el.type
+					result << "\\tagstructbegin{tag=LI}\n" 
+				end
+				
+				# turning off paragraph tagging only for the definition term. 
+				#  NOTE: This could be buggy, particularly for long terms. It may be necessary 
+				#  to keep it on and deal with the extraneous paragraph tags it generates here.
+				result << "\\tagstructbegin{tag=H3}"
+				result << "\\tagpdfparaOff\\tagmcbegin{tag=H3}\\item[#{inner(el, opts)}] \\tagmcend \\hfill \\\\ \\tagpdfparaOn"
+				result << "\\tagstructend %end lbl\n"
+
+				# if its the last element (it shouldn't be), end the list item
+				if opts[:parent].children.last == el 
+					result << "\\tagstructend % end li\n"
+				end
+				result
 			end
 
 			def convert_dd(el, opts)
-				"#{latex_link_target(el)}#{inner(el, opts)}\n\n"
+				result = +''
+				# it shouldn't be the first item, but if it is, start the list item
+				if opts[:parent].children.first == el
+					result << "\\tagstructbegin{tag=LI}\n" 
+				end
+				
+				result << "\\tagstructbegin{tag=LBody}"
+				result << "#{latex_link_target(el)}#{inner(el, opts)}"
+				result << "\\tagstructend\n"
+				
+				# if its the last element, end the list item
+				if opts[:parent].children.last == el || opts[:parent].children[opts[:index]+1].type != el.type
+					result << "\\tagstructend %end def item\n\n"
+				end
+				result
 			end
 
 			def convert_strong(el, opts)

@@ -18,9 +18,29 @@ FROM python:3-slim
 # Install latex, ruby, and extra tools
 
 RUN apt-get update && \
-  apt-get install -y texlive-latex-base texlive-latex-extra texlive-font-utils texlive-fonts-extra \
-     ruby ghostscript && \
-  apt-get clean
+  apt-get install -y \
+  ruby \
+  ghostscript \
+  wget \
+  libswitch-perl \
+  gnupg \
+  && apt-get clean && rm -rf /var/lib/apt/lists/*
+  
+# Install Texlive: latest release.
+# Based on: (Yet another) Texlive Docker image
+# https://github.com/YtoTech/docker-texlive
+# By: Yoan Tournade yoan@ytotech.com
+# Itself based on :
+# - https://www.tug.org/texlive/quickinstall.html
+# - https://tex.stackexchange.com/questions/1092/how-to-install-vanilla-texlive-on-debian-or-ubuntu
+
+COPY ./texlive.profile /tmp/
+RUN cd /tmp && wget -qO- https://mirror.ctan.org/systems/texlive/tlnet/install-tl-unx.tar.gz | tar xz \
+    && /tmp/install-tl*/install-tl -profile /tmp/texlive.profile \
+    && rm -rf /tmp/install-tl-*
+    
+# Add Texlive binaries to path.
+ENV PATH="/usr/local/texlive/bin/x86_64-linux:${PATH}"  
 
 # Install libraries under ruby (gem) and python (pip)
 
