@@ -14,13 +14,15 @@ RUN gem build kramdown-latexnist.gemspec
 ## Second stage: Build out our runtime image and copy gem from first step
 
 FROM python:3-slim
+ARG TARGETPLATFORM
+ARG BUILDPLATFORM
 
 # Install latex, ruby, and extra tools
 
 RUN apt-get update && \
-  apt-get install -y ruby ghostscript && \
+  apt-get install -y ruby ghostscript gcc musl-dev python3-dev&& \
   apt-get clean
-  
+
   # Install Texlive: latest release.
   # Based on: (Yet another) Texlive Docker image
   # https://github.com/YtoTech/docker-texlive
@@ -38,18 +40,36 @@ RUN apt-get update && \
       && apt-get clean && rm -rf /var/lib/apt/lists/*
 
   COPY ./texlive.profile /tmp/
-  RUN cd /tmp && wget -qO- https://mirror.ctan.org/systems/texlive/tlnet/install-tl-unx.tar.gz | tar xz \
-      && /tmp/install-tl*/install-tl -profile /tmp/texlive.profile \
-      && rm -rf /tmp/install-tl-*
-      
+
+  # get the texlive installer
+  RUN cd /tmp && wget -qO- https://mirror.ctan.org/systems/texlive/tlnet/install-tl-unx.tar.gz | tar xz
+
+  # Install based on platform
+  #  Also creates symlinks to common binaries directory
+  RUN if [ "$TARGETPLATFORM" = "linux/amd64" ]; then \
+  /tmp/install-tl*/install-tl -profile /tmp/texlive.profile --paper=letter --no-interaction --no-doc-install --no-src-install --force-platform x86_64-linux \
+  && ln -s /usr/local/texlive/bin/x86_64-linux/* /usr/local/texlive/bin/; \
+  elif [ "$TARGETPLATFORM" = "linux/arm64" ]; then \
+  /tmp/install-tl*/install-tl -profile /tmp/texlive.profile --paper=letter --no-interaction --no-doc-install --no-src-install --force-platform aarch64-linux \
+  && ln -s /usr/local/texlive/bin/aarch64-linux/* /usr/local/texlive/bin/; \
+  else \
+  exit 10; \
+  fi
+
+  # remove texlive installer
+  RUN rm -rf /tmp/install-tl-*
+
   # Add Texlive binaries to path.
-  ENV PATH="/usr/local/texlive/bin/x86_64-linux:${PATH}"  
-  
+  # AMD64 and ARM64 platforms install binaries in different directories
+  # /usr/local/texlive/bin/x86_64-linux and /usr/local/texlive/bin/aarch64-linux
+  # This adds the path containing symlinks to those directories
+  ENV PATH="/usr/local/texlive/bin:${PATH}"
 
 # Install libraries under ruby (gem) and python (pip)
+RUN pip install --upgrade pip
 
 RUN gem install kramdown rcapture && \
-  pip install ruamel.yaml jinja2
+  pip install ruamel.yaml jinja2 psutil
 
 # Copy our utility files from the source directory
 ADD ./pdf/kramdown-latexnist ./pdf/preprocess-pdf.py /opt/pdf/
