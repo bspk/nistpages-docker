@@ -39,3 +39,17 @@ To release these images to Docker Hub, use the script
 `./release.sh`
 
 For this script to work, you will need to be authenticated to Docker Hub and your account will need write permissions to the hosted repository.
+
+## Multi-Platform Docker images
+
+Multi-platform images supporting the AMD64 and ARM64 on Linux can be built using Docker buildx and QEMU emulation support.  First, create a new builder using the `docker-container` driver using the following command:
+
+`docker buildx create --name multiarchbuilder --driver docker-container --bootstrap`
+
+Then switch to this builder using
+
+`docker buildx use multiarchbuilder`
+
+Multi-platform images must be pushed to a repository. The images can be built and pushed to a repository using the following example:
+
+`docker buildx build --platform linux/arm64,linux/amd64 --push -t csd773/nistpages-pdf:multiarch -f pdf/Dockerfile .`
